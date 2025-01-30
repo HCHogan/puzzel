@@ -19,7 +19,6 @@ x2 :: Int
 x2 = x + 1
 
 g = \y -> method (x, y)
-
 -- g :: alpha -> ()
 -- [W] C (beta, alpha)
 -- might imagine: g :: forall a. C (beta, a) => a -> ()
