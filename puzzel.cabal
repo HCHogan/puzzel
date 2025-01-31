@@ -16,10 +16,12 @@ library thoughts
     MonoRestri
     RecordUpdates
     Impred
+    Kinds
   hs-source-dirs:
     src
   build-depends:
-    base
+    base,
+    containers,
   default-language: GHC2021
 
 executable puzzel
