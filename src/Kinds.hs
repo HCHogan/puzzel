@@ -1,12 +1,16 @@
 {-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
 
 module Kinds () where
 
 import Data.Kind (Constraint, Type)
+import Data.Proxy
 import Data.Set qualified as Set
+import GHC.TypeLits
 import Prelude hiding (Either (..), Monad (..), not)
 
 not :: Bool -> Bool
@@ -51,5 +55,21 @@ instance FunctorC Always Ord Set.Set where
   fmapC = Set.map
 
 type IntMod :: Nat -> Type
-newtype IntMod n = MkIntMod Int
-  deriving Show
+newtype IntMod n = MkIntMod Integer
+  deriving (Show)
+
+instance (KnownNat n) => Num (IntMod n) where
+  MkIntMod x + MkIntMod y = MkIntMod ((x + y) `mod` natVal (Proxy @n))
+  MkIntMod x * MkIntMod y = MkIntMod ((x * y) `mod` natVal (Proxy @n))
+  abs = id
+  signum _ = 1
+  fromInteger x = MkIntMod (fromInteger x `mod` natVal (Proxy @n))
+  negate (MkIntMod x) = MkIntMod (negate x `mod` natVal (Proxy @n))
+
+-- Phase distinction: compiletime vs runtime
+-- Take a type level information and produce a runtime information
+-- >>> :t natVal
+-- natVal :: KnownNat n => proxy n -> Integer
+
+-- >>> natVal (4 :: IntMod 5)
+-- 5
