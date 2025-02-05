@@ -28,5 +28,5 @@ g = \y -> method (x, y)
 -- [W] C (Int, alpha) <-- instance solves this constraint!
 -- we are free to generalize g :: forall b. b -> ()
 
-x3 :: ((), ())
-x3 = (g True, g 'x')
+-- x3 :: ((), ())
+-- x3 = (g True, g 'x')

@@ -20,11 +20,13 @@ library thoughts
     RecordUpdates
     Impred
     Kinds
+    CPS
   hs-source-dirs:
     src
   build-depends:
     base,
     containers,
+    mtl,
   default-language: GHC2021
 
 executable puzzel
