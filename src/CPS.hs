@@ -2,6 +2,7 @@ module CPS (pythagoras_cps) where
 
 import Control.Monad
 import Control.Monad.Cont
+import Data.Char
 
 add_cps :: Int -> Int -> ((Int -> r) -> r)
 add_cps x y = \k -> k (x + y)
@@ -81,3 +82,54 @@ foo x = callCC $ \k -> do
   let y = x ^ 2 + 3
   when (y > 20) $ k "over twenty"
   return (show $ y - 4)
+
+bar :: Char -> String -> Cont r Int
+bar c s = do
+  msg <- callCC $ \k -> do
+    let s0 = c : s
+    when (s0 == "hello") $ k "they say hello"
+    let s1 = show s0
+    return ("They appear to be saying " ++ s1)
+  return (length msg)
+
+-- >>> runCont (bar 'h' "ello") id
+-- 14
+
+quux :: Int -> Cont r Int
+quux n = callCC $ \k -> do
+  when (n < 5) $ k 1
+  return 0
+
+-- >>> runCont (quux 3) id
+-- 1
+
+-- >>> runCont (quux 7) id
+-- 0
+
+-- callCC :: ((a -> Cont r b) -> Cont r a) -> Cont r a
+-- We can make sense of that based on what we already know about callCC. The overall result type and the result type of the argument have to be the same (i.e. Cont r a), as in the absence of an invocation of k the corresponding result values are one and the same. Now, what about the type of k? As mentioned above, k's argument is made into a suspended computation inserted at the point of the callCC invocation; therefore, if the latter has type Cont r a k's argument must have type a. As for k's result type, interestingly enough it doesn't matter as long as it is wrapped in the same Cont r monad; in other words, the b stands for an arbitrary type. That happens because the suspended computation made out of the a argument will receive whatever continuation follows the callCC, and so the continuation taken by k's result is irrelevant.
+
+-- The arbitrariness of k's result type explains why the following variant of the useless line example leads to a type error:
+-- quux :: Cont r Int
+-- quux = callCC $ \k -> do
+--    let n = 5
+--    when True $ k n
+--    k 25
+-- k's result type could be anything of form Cont r b; however, the when constrains it to Cont r (), and so the closing k 25 does not match the result type of quux. The solution is very simple: replace the final k by a plain old return.
+
+-- callCC f = cont $ \h -> runCont (f (\a -> cont $ \_ -> h a)) h
+
+fun :: Int -> String
+fun n = (`runCont` id) $ do
+  str <- callCC $ \k1 -> do
+    when (n < 0) $ k1 (show n)
+    let ns = map digitToInt (show (n `div` 2))
+    n' <- callCC $ \k2 -> do
+      when (length ns < 3) $ k2 (length ns)
+      when (length ns < 5) $ k2 n
+      when (length ns < 7) $ do
+        let ns' = map intToDigit (reverse ns)
+        k1 (dropWhile (== '0') ns') -- escape 2 levels
+      return $ sum ns
+    return $ "(ns = " ++ (show ns) ++ ") " ++ (show n')
+  return $ "Answer: " ++ str
