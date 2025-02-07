@@ -21,6 +21,7 @@ library thoughts
     Impred
     Kinds
     CPS
+    MT
   hs-source-dirs:
     src
   build-depends:

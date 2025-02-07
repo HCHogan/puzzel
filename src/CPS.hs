@@ -1,7 +1,8 @@
-module CPS (pythagoras_cps) where
+module CPS (pythagoras_cps, try2Cont) where
 
 import Control.Monad
 import Control.Monad.Cont
+import Control.Monad.IO.Class
 import Data.Char
 
 add_cps :: Int -> Int -> ((Int -> r) -> r)
@@ -133,3 +134,28 @@ fun n = (`runCont` id) $ do
       return $ sum ns
     return $ "(ns = " ++ (show ns) ++ ") " ++ (show n')
   return $ "Answer: " ++ str
+
+divExcpt :: Int -> Int -> (String -> Cont r Int) -> Cont r Int
+divExcpt x y handler = callCC $ \ok -> do
+  err <- callCC $ \notok -> do
+    when (y == 0) $ notok "Div 0"
+    ok $ x `div` y
+  handler err
+
+tryCont :: (MonadCont m) => ((t -> m b) -> m a) -> (t -> m a) -> m a
+tryCont c h = callCC $ \ok -> do
+  err <- callCC $ \notok -> do
+    x <- c notok
+    ok x
+  h err
+
+try2Cont :: IO ()
+try2Cont = evalContT $ do
+  gotoA <- callCC $ \k -> let go = k go in pure go
+  pwd <- liftIO $ do
+    putStr "enter your password"
+    getLine
+  when (pwd /= "123") gotoA
+  liftIO $ putStrLn "finished"
+
+
