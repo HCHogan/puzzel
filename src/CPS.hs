@@ -133,6 +133,8 @@ quux n = callCC $ \k -> do
 -- k's result type could be anything of form Cont r b; however, the when constrains it to Cont r (), and so the closing k 25 does not match the result type of quux. The solution is very simple: replace the final k by a plain old return.
 
 -- callCC f = cont $ \h -> runCont (f (\a -> cont $ \_ -> h a)) h
+-- when f in callCC calls the escape function, the result of `f (\a -> cont $ \_ -> h a)` becomes *cont $ (\_ -> h a)*
+-- which will be called with k, then becomes h a
 
 fun :: Int -> String
 fun n = (`runCont` id) $ do
