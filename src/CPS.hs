@@ -17,7 +17,21 @@ pythagoras_cps x y = \k ->
     square_cps y $ \y_squared ->
       add_cps x_squared y_squared $ k
 
--- >>> pythagoras_cps 3 4 print
+pythagoras_cps' :: Int -> Int -> ((Int -> r) -> r)
+pythagoras_cps' x y = \k ->
+  (square_cps x)
+    ( \x_squared ->
+        (square_cps y)
+          ( \y_squared ->
+              (add_cps x_squared y_squared) k
+          )
+    )
+
+-- >>> pythagoras_cps 3 4 id
+-- 25
+
+-- >>> pythagoras_cps' 3 4 id
+-- 25
 
 thrice :: (a -> a) -> a -> a
 thrice f x = f (f (f x))
@@ -135,6 +149,16 @@ fun n = (`runCont` id) $ do
     return $ "(ns = " ++ (show ns) ++ ") " ++ (show n')
   return $ "Answer: " ++ str
 
+fun2 :: Int -> String
+fun2 n = (`runCont` id) $ callCC $ \k -> do
+  let _ = k (show 1)
+  return $ show n
+
+-- >>> fun2 123
+-- "123"
+
+-- k controls the control flow by ignoring the rest of the continuations
+
 divExcpt :: Int -> Int -> (String -> Cont r Int) -> Cont r Int
 divExcpt x y handler = callCC $ \ok -> do
   err <- callCC $ \notok -> do
@@ -158,4 +182,4 @@ try2Cont = evalContT $ do
   when (pwd /= "123") gotoA
   liftIO $ putStrLn "finished"
 
-
+-- In this section we make a CoroutineT monad that provides a monad with fork, which enqueues a new suspended coroutine, and yield, that suspends the current thread.
