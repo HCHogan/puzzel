@@ -1,3 +1,6 @@
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+
+{-# HLINT ignore "Use camelCase" #-}
 module CPS (pythagoras_cps, try2Cont) where
 
 import Control.Monad
@@ -6,24 +9,25 @@ import Control.Monad.IO.Class
 import Data.Char
 
 add_cps :: Int -> Int -> ((Int -> r) -> r)
-add_cps x y = \k -> k (x + y)
+add_cps x y k = k (x + y)
 
 square_cps :: Int -> ((Int -> r) -> r)
-square_cps x = \k -> k (x * x)
+square_cps x k = k (x * x)
 
 pythagoras_cps :: Int -> Int -> ((Int -> r) -> r)
-pythagoras_cps x y = \k ->
-  square_cps x $ \x_squared ->
-    square_cps y $ \y_squared ->
-      add_cps x_squared y_squared $ k
+pythagoras_cps x y k = square_cps x $ \x_squared ->
+  square_cps y $ \y_squared ->
+    add_cps x_squared y_squared k
 
 pythagoras_cps' :: Int -> Int -> ((Int -> r) -> r)
-pythagoras_cps' x y = \k ->
-  (square_cps x)
+pythagoras_cps' x y k =
+  square_cps
+    x
     ( \x_squared ->
-        (square_cps y)
+        square_cps
+          y
           ( \y_squared ->
-              (add_cps x_squared y_squared) k
+              add_cps x_squared y_squared k
           )
     )
 
@@ -37,19 +41,17 @@ thrice :: (a -> a) -> a -> a
 thrice f x = f (f (f x))
 
 thrice_cps :: (a -> ((a -> r) -> r)) -> a -> ((a -> r) -> r)
-thrice_cps f_cps x = \k ->
-  f_cps x $ \fx ->
-    f_cps fx $ \ffx ->
-      f_cps ffx $ k
+thrice_cps f_cps x k = f_cps x $ \fx ->
+  f_cps fx $ \ffx ->
+    f_cps ffx k
 
 -- Having continuation-passing functions, the next step is providing a neat way of composing them, preferably one which does not require the long chains of nested lambdas we have seen just above. A good start would be a combinator for applying a CPS function to a suspended computation. A possible type for it would be:
 chainCPS :: ((a -> r) -> r) -> (a -> ((b -> r) -> r)) -> ((b -> r) -> r)
-chainCPS x f_cps = \k ->
-  x $ \fx ->
-    f_cps fx $ k
+chainCPS x f_cps k = x $ \fx ->
+  f_cps fx k
 
 -- Doesn't the type of chainCPS look familiar? If we replace (a -> r) -> r with (Monad m) => m a and (b -> r) -> r with (Monad m) => m b we get the (>>=) signature. Furthermore, our old friend flip ($) plays a return-like role, in that it makes a suspended computation out of a value in a trivial way. Lo and behold, we have a monad! All we need now [3] is a Cont r a type to wrap suspended computations, with the usual wrapper and unwrapper functions.
-data MyCont r a = MyCont {runMyCont :: ((a -> r) -> r)}
+newtype MyCont r a = MyCont {runMyCont :: (a -> r) -> r}
 
 myCont :: ((a -> r) -> r) -> MyCont r a
 myCont = MyCont
@@ -68,7 +70,7 @@ instance Applicative (MyCont r) where
 instance Monad (MyCont r) where
   (MyCont s) >>= f = MyCont $ \c ->
     s $ \x ->
-      runMyCont (f x) $ c
+      runMyCont (f x) c
 
 add_cont :: Int -> Int -> MyCont r Int
 add_cont x y = MyCont $ \k -> k (x + y)
@@ -136,6 +138,9 @@ quux n = callCC $ \k -> do
 -- when f in callCC calls the escape function, the result of `f (\a -> cont $ \_ -> h a)` becomes *cont $ (\_ -> h a)*
 -- which will be called with k, then becomes h a
 
+-- myCallCC :: ((a -> Cont r b) -> Cont r a) -> Cont r a
+-- myCallCC f = cont $ \k -> runContT (f (\a -> cont $ \_ -> k a)) k
+
 fun :: Int -> String
 fun n = (`runCont` id) $ do
   str <- callCC $ \k1 -> do
@@ -148,7 +153,7 @@ fun n = (`runCont` id) $ do
         let ns' = map intToDigit (reverse ns)
         k1 (dropWhile (== '0') ns') -- escape 2 levels
       return $ sum ns
-    return $ "(ns = " ++ (show ns) ++ ") " ++ (show n')
+    return $ "(ns = " ++ show ns ++ ") " ++ show n'
   return $ "Answer: " ++ str
 
 fun2 :: Int -> String
@@ -183,5 +188,12 @@ try2Cont = evalContT $ do
     getLine
   when (pwd /= "123") gotoA
   liftIO $ putStrLn "finished"
+
+try3Cont :: Int -> (String -> Cont r String) -> Cont r String
+try3Cont n handler = callCC $ \ok -> do
+  err <- callCC $ \notok -> do
+    when (n < 0) $ notok "negative"
+    ok $ show n
+  handler err
 
 -- In this section we make a CoroutineT monad that provides a monad with fork, which enqueues a new suspended coroutine, and yield, that suspends the current thread.

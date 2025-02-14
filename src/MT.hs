@@ -35,7 +35,7 @@ eval0 env (App e1 e2) =
     case val1 of
       FunVal env' name body -> eval0 (M.insert name val2 env') body
 
-exampleExp = Lit 12 `Plus` (App (Abs "x" (Var "x")) (Lit 4 `Plus` Lit 2))
+exampleExp = Lit 12 `Plus` App (Abs "x" (Var "x")) (Lit 4 `Plus` Lit 2)
 
 -- >>> eval0 M.empty exampleExp
 -- IntVal 18
@@ -53,3 +53,40 @@ eval1 env (Plus e1 e2) = do
     _ -> error "shit"
 
 -- enva1 env (Lit n)
+
+testme :: Either String Int
+testme = do
+  x <- Right 10
+  y <- throwError "opps" `catchError` (\err -> pure 1)
+  return $ x + y
+
+-- >>> testme
+-- Right 11
+
+testmw :: Writer String (Int, String -> String)
+testmw = do
+  tell "Starting calculation..."
+  let x = 1 + 1
+  -- (x, w) <- listen
+  tell "calculation complelte"
+  return (x, reverse)
+
+testmw2 :: Writer String Int
+testmw2 = do
+  x <- pass testmw
+  return (x + 1)
+
+runEval2 :: Eval2 a -> Either String a
+runEval2 ev = runIdentity (runExceptT ev)
+
+type Eval2 a = ExceptT String Identity a
+
+eval2a :: Env -> Exp -> Eval2 Value
+eval2a env (Lit i) = return $ IntVal i
+eval2a env (Var n) = throwError ("Variable not found: " ++ n) `maybe` return $ M.lookup n env
+eval2a env (Plus e1 e2) = do
+  e1' <- eval2a env e1
+  e2' <- eval2a env e2
+  case (e1', e2') of
+    (IntVal i1, IntVal i2) -> return $ IntVal (i1 + i2)
+    _ -> throwError "Type error"

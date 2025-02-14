@@ -1,9 +1,13 @@
 module Main where
 
+import Control.Concurrent (threadDelay)
+import Control.Monad (forever)
+
 -- import Puzzel (answers)
 
 main :: IO ()
-main = do
-  -- putStrLn $ "There are " ++ show (length answers) ++ " solutions:" 
-  -- print answers
-  print "Hello, World!"
+main = forever $ do
+  putStrLn "What is your question?"
+  _ <- getLine
+  threadDelay 1000000
+  putStrLn "busy"
