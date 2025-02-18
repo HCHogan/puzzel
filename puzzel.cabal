@@ -8,7 +8,7 @@ build-type:         Simple
 extra-doc-files:    CHANGELOG.md
 
 common warnings
-    ghc-options: -Wall
+  ghc-options: -Wall
 
 library thoughts
   exposed-modules:
@@ -31,9 +31,9 @@ library thoughts
   default-language: GHC2021
 
 executable puzzel
-    import:           warnings
-    main-is:          Main.hs
-    build-depends:
-      base,
-    hs-source-dirs:   app
-    default-language: GHC2021
+  import:           warnings
+  main-is:          Main.hs
+  build-depends:
+    base,
+  hs-source-dirs:   app
+  default-language: GHC2021
