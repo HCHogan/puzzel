@@ -90,3 +90,6 @@ eval2a env (Plus e1 e2) = do
   case (e1', e2') of
     (IntVal i1, IntVal i2) -> return $ IntVal (i1 + i2)
     _ -> throwError "Type error"
+
+eval2b :: Env -> Exp -> Eval2 Value
+eval2b env (Lit i) = return $ IntVal i
