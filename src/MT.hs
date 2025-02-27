@@ -93,3 +93,8 @@ eval2a env (Plus e1 e2) = do
 
 eval2b :: Env -> Exp -> Eval2 Value
 eval2b env (Lit i) = return $ IntVal i
+
+type Eval5 a = ReaderT Env (ExceptT String (WriterT [String] (StateT Integer Identity))) a
+
+runEval5 :: Env -> Integer -> Eval5 a -> ((Either String a, [String]), Integer)
+runEval5 env st ev = runIdentity $ runStateT (runWriterT (runExceptT (runReaderT ev env))) st
