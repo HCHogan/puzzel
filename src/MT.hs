@@ -94,7 +94,33 @@ eval2a env (Plus e1 e2) = do
 eval2b :: Env -> Exp -> Eval2 Value
 eval2b env (Lit i) = return $ IntVal i
 
+tick :: (Num s, MonadState s m) => m ()
+tick = get >>= put . (+ 1)
+
 type Eval5 a = ReaderT Env (ExceptT String (WriterT [String] (StateT Integer Identity))) a
 
 runEval5 :: Env -> Integer -> Eval5 a -> ((Either String a, [String]), Integer)
 runEval5 env st ev = runIdentity $ runStateT (runWriterT (runExceptT (runReaderT ev env))) st
+
+eval5 :: Exp -> Eval5 Value
+eval5 (Lit i) = do
+  tick
+  return $ IntVal i
+eval5 (Var n) = do
+  tick
+  tell [n]
+  env <- ask
+  case M.lookup n env of
+    Nothing -> throwError ("unbound variable: " ++ n)
+    Just val -> return val
+eval5 (Abs n e) = do
+  tick
+  env <- ask
+  return $ FunVal env n e
+eval5 (App e1 e2) = do
+  tick
+  val1 <- eval5 e1
+  val2 <- eval5 e2
+  case val1 of
+    FunVal env' n body -> local (const (M.insert n val2 env')) (eval5 body)
+    _ -> throwError "Type error in app"
