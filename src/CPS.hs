@@ -1,11 +1,14 @@
+{-# LANGUAGE ApplicativeDo #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
-{-# HLINT ignore "Use camelCase" #-}
+{- HLINT ignore "Use camelCase" -}
+
 module CPS (pythagoras_cps, try2Cont) where
 
 import Control.Monad
 import Control.Monad.Cont
 import Control.Monad.IO.Class
+import Control.Monad.State
 import Data.Char
 
 add_cps :: Int -> Int -> ((Int -> r) -> r)
@@ -161,6 +164,19 @@ fun2 n = (`runCont` id) $ callCC $ \k -> do
   let _ = k (show 1)
   return $ show n
 
+fun3 :: Int -> String
+fun3 n = (`runCont` id) $ do
+  str <- callCC $ \k -> do
+    when (n < 0) $ k "negative"
+    return $ show n
+  return $ "Answer: " ++ str
+
+-- >>> fun3 123
+-- "Answer: 123"
+
+-- >>> fun3 (-123)
+-- "Answer: negative"
+
 -- >>> fun2 123
 -- "123"
 
@@ -172,6 +188,12 @@ divExcpt x y handler = callCC $ \ok -> do
     when (y == 0) $ notok "Div 0"
     ok $ x `div` y
   handler err
+
+-- >>> runCont (divExcpt 10 0 (return . length)) id
+-- 5
+
+-- >>> runCont (divExcpt 10 5 (return . length)) id
+-- 2
 
 tryCont :: (MonadCont m) => ((t -> m b) -> m a) -> (t -> m a) -> m a
 tryCont c h = callCC $ \ok -> do
@@ -196,4 +218,79 @@ try3Cont n handler = callCC $ \ok -> do
     ok $ show n
   handler err
 
+fun4 :: (MonadCont m) => Int -> m String
+fun4 n = callCC $ \k -> do
+  when (n < 0) $ k ""
+  return $ show n
+
+-- applicative do
+foo5 ma mb = do
+  a <- ma
+  b <- mb
+  return (a, b)
+
+data SqrtException = LessThanZero deriving (Show, Eq)
+sqrtIO :: (SqrtException -> ContT r IO ()) -> ContT r IO ()
+sqrtIO throw = do
+  ln <- liftIO (putStr "ENter a number to sqrt: " *> readLn)
+  when (ln < 0) (throw LessThanZero)
+  liftIO $ print (sqrt ln)
+
 -- In this section we make a CoroutineT monad that provides a monad with fork, which enqueues a new suspended coroutine, and yield, that suspends the current thread.
+
+-- The CoroutineT monad is just ContT stacked with a StateT containing the suspended coroutines.
+newtype CoroutineT r m a = CoroutineT {runCoroutineT' :: ContT r (StateT [CoroutineT r m ()] m) a}
+  deriving (Functor, Applicative, Monad, MonadCont, MonadIO)
+
+-- used to manipulate the coroutine queue
+getCCs :: (Monad m) => CoroutineT r m [CoroutineT r m ()]
+getCCs = CoroutineT $ lift get
+
+putCCs :: (Monad m) => [CoroutineT r m ()] -> CoroutineT r m ()
+putCCs = CoroutineT . lift . put
+
+-- pop and push coroutines to the queue.
+dequeue :: (Monad m) => CoroutineT r m ()
+dequeue = do
+  current_ccs <- getCCs
+  case current_ccs of
+    [] -> return ()
+    (p : ps) -> do
+      putCCs ps
+      p
+
+queue :: (Monad m) => CoroutineT r m () -> CoroutineT r m ()
+queue p = do
+  cc <- getCCs
+  putCCs (cc ++ [p])
+
+-- The interface
+yield :: (Monad m) => CoroutineT r m ()
+yield = callCC $ \k -> do
+  queue (k ())
+  dequeue
+
+fork :: (Monad m) => CoroutineT r m () -> CoroutineT r m ()
+fork p = callCC $ \k -> do
+  queue (k ())
+  p
+  dequeue
+
+exhaust :: (Monad m) => CoroutineT r m ()
+exhaust = do
+  exhausted <- null <$> getCCs
+  unless exhausted $ yield >> exhaust
+
+-- Runs the coroutines in the base monad.
+runCoroutineT :: (Monad m) => CoroutineT r m r -> m r
+runCoroutineT = flip evalStateT [] . flip runContT return . runCoroutineT' . (<* exhaust)
+
+printOne n = do
+  liftIO (print n)
+  yield
+
+-- example ::
+-- example = runCoroutineT $ do
+--   fork $ replicateM_ 3 (printOne 3)
+--   fork $ replicateM_ 4 (printOne 4)
+--   replicateM_ 2 (printOne 2)

@@ -27,6 +27,7 @@
             clang
             clang-tools
             cabal-install
+            hlint
           ];
           shellHook = ''
             export SHELL=$(which zsh)
