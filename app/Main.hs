@@ -2,6 +2,7 @@ module Main where
 
 import Control.Concurrent (threadDelay)
 import Control.Monad (forever)
+-- import CPS (example)
 
 -- import Puzzel (answers)
 

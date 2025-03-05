@@ -3,7 +3,7 @@
 
 {- HLINT ignore "Use camelCase" -}
 
-module CPS (pythagoras_cps, try2Cont) where
+module CPS (pythagoras_cps, try2Cont, example) where
 
 import Control.Monad
 import Control.Monad.Cont
@@ -289,8 +289,8 @@ printOne n = do
   liftIO (print n)
   yield
 
--- example ::
--- example = runCoroutineT $ do
---   fork $ replicateM_ 3 (printOne 3)
---   fork $ replicateM_ 4 (printOne 4)
---   replicateM_ 2 (printOne 2)
+example :: (MonadIO m) => m ()
+example = runCoroutineT $ do
+  fork $ replicateM_ 3 (printOne 3)
+  fork $ replicateM_ 4 (printOne 4)
+  replicateM_ 2 (printOne 2)
