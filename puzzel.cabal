@@ -22,12 +22,14 @@ library thoughts
     Kinds
     CPS
     MT
+    Len
   hs-source-dirs:
     src
   build-depends:
     base,
     containers,
     mtl,
+    lens,
   default-language: GHC2021
 
 executable puzzel
