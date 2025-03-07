@@ -19,6 +19,7 @@ library thoughts
     MonoRestri
     RecordUpdates
     Impred
+    Imperative
     Kinds
     CPS
     MT
@@ -30,6 +31,7 @@ library thoughts
     containers,
     mtl,
     lens,
+    type-operators,
   default-language: GHC2021
 
 executable puzzel
