@@ -5,10 +5,10 @@
 module Len () where
 
 import Control.Lens
+import Control.Monad
 import Control.Type.Operator
 import Data.Functor.Contravariant
-import Control.Monad
-import Data.Monoid (Sum(..))
+import Data.Monoid (Sum (..))
 
 -- Functional references point at parts of values, allowing us to access and modify then functionally.
 
@@ -40,11 +40,11 @@ makeLenses ''Segment
 -- positionY is a reference to a `Double` within a `Point`.
 -- >>> :info positionY
 -- positionY :: Lens' Point Double
---   	-- Defined at /Users/hank/Development/hs/puzzel/src/Len.hs:36:1
+--   	-- Defined at /home/hank/Development/hs/puzzel/src/Len.hs:37:1
 
 -- >>> :info segmentEnd
 -- segmentEnd :: Lens' Segment Point
---   	-- Defined at /Users/hank/Development/hs/puzzel/src/Len.hs:37:1
+--   	-- Defined at /home/hank/Development/hs/puzzel/src/Len.hs:38:1
 
 -- >>> let testSeg = makeSegment (0, 1) (2, 4)
 -- >>> view segmentEnd testSeg
@@ -105,6 +105,7 @@ myMapped g a = Identity $ fmap (runIdentity . g) a
 -- forall r. Monoid r => (a -> Const r a) -> s -> Const r s
 -- Control.Lens.Fold uses something slightly more general than `Monoid r => Const r`:
 type MyFold s a = forall f. (Contravariant f, Applicative f) => (a -> f a) -> s -> f s
+
 -- `Monoid r => Const r` is both Contravariant and Applicative. Thanks to the functor and contravariant laws, anything that is both a Contravariant and a Functor is, just like Const r, a vacuous functor, with both fmap and contramap doing nothing. The additional Applicative constraint corresponds to the Monoid r; it allows us to actually perform the fold by combining the Const-like contexts created from the targets.
 
 -- Every Traversal can be used as a Fold, given that a `Traversal` must work with any Applicative, including those are also Contravariant. The situation parallels exactly what we have seen for `Traversal` and `Setter`.
@@ -117,6 +118,7 @@ type MyFold s a = forall f. (Contravariant f, Applicative f) => (a -> f a) -> s 
 
 -- relax the `Applicative` constraint to merely `Functor`, we obtain a `Getter`.
 type MyGetter s a = forall f. (Contravariant f, Functor f) => (a -> f a) -> s -> f s
+
 -- As f still has to be both Contravariant and Functor, it remains being a Const-like vacuous functor. Without the Applicative constraint, however, we can't combine results from multiple targets. The upshot is that a Getter always has exactly one target, unlike a Fold (or, for that matter, a Setter, or a Traversal) which can have any number of targets, including zero.
 -- someGetter :: (a -> r a) -> s -> Const r s
 -- A Getter s a is equivalent to a s -> a function. From this point of view, it is only natural that it takes exactly one target to exactly one result. It is not surprising either that two basic combinators from Control.Lens.Getter are to, which makes a Getter out of an arbitrary function, and view, which converts a Getter back to an arbitrary function.
@@ -129,3 +131,43 @@ type MyGetter s a = forall f. (Contravariant f, Functor f) => (a -> f a) -> s ->
 -- Sum {getSum = 55}
 -- [1,2,3,4,5]
 
+-- Semantic editor combinators:
+-- >>> :t (.)
+-- (.) :: (b -> c) -> (a -> b) -> a -> c
+
+-- >>> :t (.).(.)
+-- (.).(.) :: (b -> c) -> (a1 -> a2 -> b) -> a1 -> a2 -> c
+
+-- >>> :t traverse . traverse . traverse
+-- traverse . traverse . traverse
+--   :: (Applicative f, Traversable t1, Traversable t2,
+--       Traversable t3) =>
+--      (a -> f b) -> t1 (t2 (t3 a)) -> f (t1 (t2 (t3 b)))
+
+-- type SEC s t a b = (a -> b) -> s -> t
+-- functions like fmap, first can be extend to this type
+
+-- you can get fmap by providing the identity functor:
+-- fmapDefault f = runIdentity . traverse (Identity . f)
+-- if we pass the traverse as an argument:
+-- over l f = runIdentity . l (Identity . f)
+-- over :: ((a -> Identity b) -> s -> Identtity t) -> (a -> b) -> s -> t
+-- over traverse f === runIdentity . traverse (Identity f) === fmapDefault f === fmap f
+-- the type system will automatically choose Identity as the functor userd inside traverse here
+-- type Setter s t a b = (a -> Identity b) -> s -> Identity t
+-- mapped :: Functor f => Setter (f a) (f b) a b
+-- mapped f = Identity . fmap (runIdentity . fmap)
+-- over mapped f = runIdentity . mapped (Identity . f) === runIdentity . Identity . fmap (runIdentity . Identity f)
+-- === fmap f
+
+-- we can make a setter for Data.Text:
+-- chars :: Setter Text Text Char Char === (Char -> Identity Char) -> Text -> Identity Text
+-- chars f = fmap pack . mapped f . unpack
+-- we can even make setters that are not valid functor
+-- both :: Setter (a , a) (b, b) a b
+-- both f (a, b) = (,) <$> f a <*> f b
+-- first :: Setter (a, c) (b, c) a b
+-- first f (a, b) = (,b) <$> f a
+
+-- >>> (1, 2) & _1 .~ "hello" & _2 .~ "World"
+-- ("hello","World")
