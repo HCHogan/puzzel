@@ -24,6 +24,8 @@ library thoughts
     CPS
     MT
     Len
+    ISO
+    Com
   hs-source-dirs:
     src
   build-depends:
@@ -32,6 +34,8 @@ library thoughts
     mtl,
     lens,
     type-operators,
+    parsec,
+    comonad,
   default-language: GHC2021
 
 executable puzzel

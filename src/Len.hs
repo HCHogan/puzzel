@@ -56,6 +56,7 @@ makeLenses ''Segment
 -- >>> let testSeg = makeSegment (0, 1) (2, 4)
 -- >>> view (segmentEnd . positionY) testSeg
 -- 4.0
+_ = view (segmentEnd . positionY) (makeSegment (0, 1) (2, 4))
 
 -- >>> let testSeg = makeSegment (0, 1) (2, 4)
 -- >>> over (segmentEnd . positionY) (2 *) testSeg
