@@ -26,6 +26,7 @@ library thoughts
     Len
     ISO
     Com
+    Eff
   hs-source-dirs:
     src
   build-depends:
@@ -36,6 +37,8 @@ library thoughts
     type-operators,
     parsec,
     comonad,
+    effectful,
+    aeson,
   default-language: GHC2021
 
 executable puzzel

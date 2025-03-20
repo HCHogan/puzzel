@@ -2,6 +2,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE GADTs #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
 
@@ -73,3 +74,25 @@ instance (KnownNat n) => Num (IntMod n) where
 
 -- >>> natVal (4 :: IntMod 5)
 -- 5
+
+-- lets write a typesafe vec
+data MyNat = Z | S MyNat
+
+data Vec :: MyNat -> Type -> Type where
+  VNil :: Vec 'Z a
+  VCons :: a -> Vec n a -> Vec ('S n) a
+
+headVec :: Vec ('S n) a -> a
+headVec (VCons x _) = x
+
+exampleVec :: Vec ('S ('S 'Z)) Int
+exampleVec = VCons 1 (VCons 2 VNil)
+
+-- let's try this out
+-- >>> headVec VNil
+-- Couldn't match type 'Z with 'S n0_aADI[tau:1]
+-- Expected: Vec ('S n0_aADI[tau:1]) a_aADJ[sk:1]
+--   Actual: Vec 'Z a_aADJ[sk:1]
+-- In the first argument of `headVec', namely `VNil'
+-- In the expression: headVec VNil
+-- In an equation for `it_aABF': it_aABF = headVec VNil

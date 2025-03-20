@@ -40,11 +40,11 @@ makeLenses ''Segment
 -- positionY is a reference to a `Double` within a `Point`.
 -- >>> :info positionY
 -- positionY :: Lens' Point Double
---   	-- Defined at /home/hank/Development/hs/puzzel/src/Len.hs:37:1
+--   	-- Defined at /home/hank/Development/hs/puzzel/src/Len.hs:38:1
 
 -- >>> :info segmentEnd
 -- segmentEnd :: Lens' Segment Point
---   	-- Defined at /home/hank/Development/hs/puzzel/src/Len.hs:38:1
+--   	-- Defined at /home/hank/Development/hs/puzzel/src/Len.hs:39:1
 
 -- >>> let testSeg = makeSegment (0, 1) (2, 4)
 -- >>> view segmentEnd testSeg
@@ -172,3 +172,33 @@ type MyGetter s a = forall f. (Contravariant f, Functor f) => (a -> f a) -> s ->
 
 -- >>> (1, 2) & _1 .~ "hello" & _2 .~ "World"
 -- ("hello","World")
+
+-- >>> (("Alice", 1), ("Bob", 2)) ^.. folded . _1
+-- ["Bob"]
+
+-- >>> import Data.Map as Map
+-- >>> Map.fromList [("hello", 4)] & at "hello" .~ Nothing
+-- fromList []
+
+-- >>> (1, 2) ^.. both
+-- [1,2]
+
+-- >>> [(1,2),(3,4),(5,6)] ^.. traverse . both
+-- [1,2,3,4,5,6]
+
+-- >>> import Data.Aeson.Lens
+-- >>> import Data.Aeson
+-- >>> let json = "[{\"name\": \"Alice\"}, {\"name\": \"Bob\"}]"
+-- >>> names = json ^.. values . key "name" . _String
+-- ["Alice","Bob"]
+
+-- In nutshell:
+-- type Traversal s t a b = forall f. Applicative f => (a -> f b)        -> s -> f t
+-- type Lens      s t a b = forall f. Functor f     => (a -> f b)        -> s -> f t
+-- type Setter    s t a b =                            (a -> Identity b) -> s -> Identity t
+-- type Fold      s   a   = forall m. Monoid m      => (a -> Const m a)  -> s -> Const m s
+-- type Geting  r s t a b =                            (a -> Const r b)  -> s -> Const r t
+--
+-- Some useful alias:
+-- type Getter     s a    = Getting a s s a a
+-- type SimpleLens s a    = type Lens' s a = Lens s s a a
