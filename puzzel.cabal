@@ -27,6 +27,7 @@ library thoughts
     ISO
     Com
     Eff
+    GADT
   hs-source-dirs:
     src
   build-depends:
