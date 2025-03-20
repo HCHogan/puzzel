@@ -197,7 +197,7 @@ type MyGetter s a = forall f. (Contravariant f, Functor f) => (a -> f a) -> s ->
 -- type Lens      s t a b = forall f. Functor f     => (a -> f b)        -> s -> f t
 -- type Setter    s t a b =                            (a -> Identity b) -> s -> Identity t
 -- type Fold      s   a   = forall m. Monoid m      => (a -> Const m a)  -> s -> Const m s
--- type Geting  r s t a b =                            (a -> Const r b)  -> s -> Const r t
+-- type Getting r s   a   =                            (a -> Const r a)  -> s -> Const r s
 --
 -- Some useful alias:
 -- type Getter     s a    = Getting a s s a a
