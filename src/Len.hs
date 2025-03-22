@@ -201,6 +201,7 @@ type MyGetter s a = forall f. (Contravariant f, Functor f) => (a -> f a) -> s ->
 -- ["Alice","Bob"]
 
 -- In nutshell:
+-- These types provide the path to do something, which is also composable.
 -- type Traversal s t a b = forall f. Applicative f => (a -> f b)        -> s -> f t
 -- type Lens      s t a b = forall f. Functor f     => (a -> f b)        -> s -> f t
 -- type Setter    s t a b =                            (a -> Identity b) -> s -> Identity t
@@ -210,6 +211,15 @@ type MyGetter s a = forall f. (Contravariant f, Functor f) => (a -> f a) -> s ->
 -- Some useful alias:
 -- type Getter     s a    = Getting a s s a a
 -- type SimpleLens s a    = type Lens' s a = Lens s s a a
+--
+-- These functions pick the suitable Functor/Applicative to drive the Traversal/Lens
+-- over :: Traversal s t a b -> (a -> b) -> s -> t
+-- set  :: Setter s t a b    -> b        -> s -> t
+-- view :: Getter s a                    -> s -> a
+--
+-- These functions works as Traversal/Lens generators:
+-- to     :: (s -> a) -> Getter s a
+-- mapped :: Functor f => Setter (f a) (f b) a b
 
 -- >>> "hello" ^. packed :: Text
 -- "hello"
