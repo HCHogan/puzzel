@@ -9,6 +9,8 @@ import Control.Monad
 import Control.Type.Operator
 import Data.Functor.Contravariant
 import Data.Monoid (Sum (..))
+import Data.Text
+import Data.Text.Lens
 
 -- Functional references point at parts of values, allowing us to access and modify then functionally.
 
@@ -40,11 +42,11 @@ makeLenses ''Segment
 -- positionY is a reference to a `Double` within a `Point`.
 -- >>> :info positionY
 -- positionY :: Lens' Point Double
---   	-- Defined at /home/hank/Development/hs/puzzel/src/Len.hs:38:1
+--   	-- Defined at /Users/hank/Development/hs/puzzel/src/Len.hs:39:1
 
 -- >>> :info segmentEnd
 -- segmentEnd :: Lens' Segment Point
---   	-- Defined at /home/hank/Development/hs/puzzel/src/Len.hs:39:1
+--   	-- Defined at /Users/hank/Development/hs/puzzel/src/Len.hs:40:1
 
 -- >>> let testSeg = makeSegment (0, 1) (2, 4)
 -- >>> view segmentEnd testSeg
@@ -100,7 +102,13 @@ myMapped g a = Identity $ fmap (runIdentity . g) a
 
 -- >>> let largerThanFour = Predicate (> 4)
 -- >>> getPredicate (contramap length largerThanFour) "hello"
--- True
+-- Ambiguous occurrence `length'.
+-- It could refer to
+--    either `Prelude.length',
+--           imported from `Prelude' at /Users/hank/Development/hs/puzzel/src/Len.hs:5:8-10
+--           (and originally defined in `GHC.Internal.Data.Foldable'),
+--        or `Data.Text.length',
+--           imported from `Data.Text' at /Users/hank/Development/hs/puzzel/src/Len.hs:12:1-16.
 
 -- its time to do the same with foldMap-as-traversal.
 -- forall r. Monoid r => (a -> Const r a) -> s -> Const r s
@@ -202,3 +210,21 @@ type MyGetter s a = forall f. (Contravariant f, Functor f) => (a -> f a) -> s ->
 -- Some useful alias:
 -- type Getter     s a    = Getting a s s a a
 -- type SimpleLens s a    = type Lens' s a = Lens s s a a
+
+-- >>> "hello" ^. packed :: Text
+-- "hello"
+
+-- >>> anyOf (both.text) (== 'c') (("chello" ^. packed :: Text), ("hello" ^. packed :: Text))
+-- True
+
+-- Folds
+-- foldMap can also compose like fmap or traverse or dot:
+-- >>> :t foldMap . foldMap . foldMap
+-- foldMap . foldMap . foldMap
+--   :: (Monoid m, Foldable t1, Foldable t2, Foldable t3) =>
+--      (a -> m) -> t1 (t2 (t3 a)) -> m
+
+-- foldMapDefault :: (Monoid m, Traversable t) =>  (a -> m) -> f a -> m
+-- foldMapDefault f = getConst . traverse (Const . f)
+-- like over, we can pass the traverse as an argument:
+-- foldMapOf l f = getConst . l (Const . f)

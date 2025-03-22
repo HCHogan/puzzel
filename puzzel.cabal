@@ -40,6 +40,7 @@ library thoughts
     comonad,
     effectful,
     aeson,
+    text,
   default-language: GHC2021
 
 executable puzzel
