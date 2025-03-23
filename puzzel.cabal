@@ -28,6 +28,7 @@ library thoughts
     Com
     Eff
     GADT
+    THIH
   hs-source-dirs:
     src
   build-depends:
