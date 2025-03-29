@@ -30,6 +30,7 @@ library thoughts
     Eff
     GADT
     THIH
+    MicroLens
   hs-source-dirs:
     src
   build-depends:
