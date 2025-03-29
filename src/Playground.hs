@@ -2,6 +2,8 @@ module Playground (RegExp (..), parseRegExp) where
 
 import Text.Parsec
 import Text.Parsec.String (Parser)
+import Control.Monad.ST
+import Data.STRef
 
 class Collects s where
   insert :: s a -> a -> s a
@@ -67,3 +69,11 @@ parenParser = do
 
 regParser :: Parser RegExp
 regParser = try orParser <|> sequenceParser
+
+counterExample :: Int
+counterExample = runST $ do
+  ref <- newSTRef 0
+  modifySTRef ref (+1)
+  readSTRef ref
+
+-- _ = runST (newSTRef 1)

@@ -29,3 +29,4 @@ emain = runEff $ do
   let initialState = AppState (User "Alice" 30) 1
   finalState <- runState initialState modifyUserName
   liftIO $ print finalState
+

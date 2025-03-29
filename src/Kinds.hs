@@ -5,6 +5,8 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE PolyKinds #-}
 
 module Kinds () where
 
@@ -96,3 +98,13 @@ exampleVec = VCons 1 (VCons 2 VNil)
 -- In the first argument of `headVec', namely `VNil'
 -- In the expression: headVec VNil
 -- In an equation for `it_aABF': it_aABF = headVec VNil
+
+type family Sing :: k -> Type
+
+class FromSing k where
+  fromSing :: Sing (a :: k) -> k
+
+data MyProxy a = MyProxy
+
+data MyBox = forall a. MkT a
+
