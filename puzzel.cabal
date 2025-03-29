@@ -12,6 +12,7 @@ common warnings
 
 library thoughts
   exposed-modules:
+    Lists
     Traversable
     FuncDep
     Playground
