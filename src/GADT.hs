@@ -89,6 +89,15 @@ tail (VCons x xs) = xs
 (++) VNil x = x
 (++) (VCons x xs) y = VCons x (xs ++ y)
 
+data T a where
+  T1 :: Bool -> T Bool
+  T2 :: T a
+
+f :: T a -> a -> a
+f x y = case x of
+  T1 z -> True
+  T2 -> y
+
 -- example
 -- vecIndex' (SSucc SZero) vecTwo -- 成功
 -- vecIndex' (SSucc $ SSucc SZero) vecTwo -- 报错
