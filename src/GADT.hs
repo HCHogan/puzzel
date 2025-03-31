@@ -98,6 +98,9 @@ f x y = case x of
   T1 z -> True
   T2 -> y
 
+rankN :: (forall a. a -> Int) -> Int
+rankN f = f 1 + f "hello"
+
 -- example
 -- vecIndex' (SSucc SZero) vecTwo -- 成功
 -- vecIndex' (SSucc $ SSucc SZero) vecTwo -- 报错
