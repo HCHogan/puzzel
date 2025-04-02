@@ -6,10 +6,11 @@
 
 module GADT () where
 
+import Data.IntMap qualified as IM
 import Data.Kind
 import Data.Type.Bool (If)
 import Data.Type.Equality (type (==))
-import Prelude hiding (drop, head, indx, replicate, tail, take, zipWith, (++))
+import Prelude hiding (drop, head, indx, lookup, replicate, tail, take, zipWith, (++))
 
 data Color = Red | Green | Blue
 
@@ -104,3 +105,76 @@ rankN f = f 1 + f "hello"
 -- example
 -- vecIndex' (SSucc SZero) vecTwo -- 成功
 -- vecIndex' (SSucc $ SSucc SZero) vecTwo -- 报错
+
+class Key k where
+  data Map k :: Type -> Type
+  empty :: Map k v
+  lookup :: k -> Map k v -> Maybe v
+
+instance Key Bool where
+  data Map Bool v = MapBool (Maybe v) (Maybe v)
+  empty = MapBool Nothing Nothing
+  lookup True (MapBool x _) = x
+  lookup False (MapBool _ y) = y
+
+instance (Key a, Key b) => Key (a, b) where
+  data Map (a, b) v = MapPair (Map a (Map b v))
+  empty = MapPair empty
+  lookup (x, y) (MapPair m) = lookup x m >>= \m2 -> lookup y m2
+
+instance (Key a) => Key [a] where
+  data Map [a] v = MapList (Maybe v) (Map (a, [a]) v)
+  empty = MapList Nothing empty
+  lookup [] (MapList m0 _) = m0
+  lookup (x : xs) (MapList _ m1) = lookup (x, xs) m1
+
+-- can be think of a synatic sugar for a type level function:
+-- data Map_Bool v = MapBool (Maybe v) (Maybe v)
+-- instance Key Bool where
+--   type Map Bool = Map_Bool
+--   ...
+
+-- we can also use external map implementation directly in our map:
+instance Key Int where
+  data Map Int v = MapInt (IM.IntMap v)
+  empty = MapInt IM.empty
+  lookup k (MapInt m) = IM.lookup k m
+
+-- memo functions
+class Memo k where
+  data Table k :: Type -> Type
+  toTable :: (k -> r) -> Table k r -- build the table
+  fromTable :: Table k r -> k -> r -- get the memod function from the table
+
+memo :: (Memo k) => (k -> r) -> k -> r
+memo f = fromTable (toTable f)
+
+instance Memo Bool where
+  data Table Bool w = TBool w w
+  toTable f = TBool (f True) (f False)
+  fromTable (TBool x y) b = if b then x else y
+
+instance (Memo a) => Memo [a] where
+  data Table [a] w = TList w (Table a (Table [a] w)) -- w is the value for [], Table a (Table [a] w) is the value for (x:xs)
+  toTable f = TList (f []) (toTable (\x -> toTable (\xs -> f (x : xs))))
+  fromTable (TList t _) [] = t
+  fromTable (TList _ t) (x : xs) = fromTable (fromTable t x) xs
+
+instance Memo Int where
+  data Table Int w = TInt (Table [Bool] w)
+  toTable f = TInt (toTable (f . bitsToInt))
+   where
+    bitsToInt = error "TODO"
+  fromTable (TInt t) n = fromTable t (intToBits n)
+   where
+    intToBits = error "TODO"
+
+-- linear fib
+fib :: Int -> Int
+fib = memo fib'
+  where
+    fib' :: Int -> Int
+    fib' 0 = 1
+    fib' 1 = 1
+    fib' n = fib (n - 1) + fib (n - 2)
+
