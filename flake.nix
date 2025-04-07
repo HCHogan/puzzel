@@ -24,6 +24,7 @@
           buildInputs = with pkgs; [
             haskell.compiler.ghc9101
             haskell.packages.ghc9101.haskell-language-server
+            hlint
             clang
             clang-tools
             cabal-install

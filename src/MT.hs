@@ -89,6 +89,7 @@ eval2a env (Plus e1 e2) = do
   e2' <- eval2a env e2
   case (e1', e2') of
     (IntVal i1, IntVal i2) -> return $ IntVal (i1 + i2)
+<<<<<<< Updated upstream
     _ -> throwError "Type error"
 
 eval2b :: Env -> Exp -> Eval2 Value
@@ -124,3 +125,44 @@ eval5 (App e1 e2) = do
   case val1 of
     FunVal env' n body -> local (const (M.insert n val2 env')) (eval5 body)
     _ -> throwError "Type error in app"
+=======
+    _ -> throwError "Type error in application"
+eval2a env (Abs n e) = return $ FunVal env n e
+eval2a env (App e1 e2) = do
+  val1 <- eval2a env e1
+  val2 <- eval2a env e2
+  case val1 of
+    FunVal env' n body -> eval2a (M.insert n val2 env') body
+
+type Eval3 a = ReaderT Env (ExceptT String Identity) a
+
+runEval3 :: Env -> Eval3 a -> Either String a
+runEval3 env e = runIdentity (runExceptT (runReaderT e env))
+
+eval3 :: Exp -> Eval3 Value
+eval3 (Lit i) = return $ IntVal i
+eval3 (Var n) = do
+  env <- ask
+  throwError ("Variable not found: " ++ n) `maybe` return $ M.lookup n env
+eval3 (Plus e1 e2) = do
+  e1' <- eval3 e1
+  e2' <- eval3 e2
+  case (e1', e2') of
+    (IntVal i1, IntVal i2) -> return $ IntVal (i1 + i2)
+    _ -> throwError "Type Error"
+eval3 (Abs n e) = do
+  env <- ask
+  env <- ask
+  return $ FunVal env n e
+eval3 (App e1 e2) = do
+  val1 <- eval3 e1
+  val2 <- eval3 e2
+  case val1 of
+    (FunVal env' n body) -> local (const (M.insert n val2 env')) (eval3 body)
+    _ -> throwError "Type error in application"
+
+-- >>> runEval3 M.empty (eval3 exampleExp)
+-- Right (IntVal 18)
+
+
+>>>>>>> Stashed changes
