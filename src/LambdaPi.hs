@@ -107,16 +107,16 @@ import Control.Monad.Except
 
 -- inferable types:
 data TermI
-  = Ann TermC Type
-  | Bound Int
-  | Free Name
-  | TermI :@: TermC
+  = Ann TermC Type    -- An annotated term is inferable
+  | Bound Int         -- A bounded variable is inferable
+  | Free Name         -- same for free variable, search in global
+  | TermI :@: TermC   -- in e (\x -> e') x's type can be determined by the type of e
   deriving (Show, Eq)
 
 -- checkable types:
 data TermC
-  = Inf TermI
-  | Lam TermC
+  = Inf TermI         -- Inferable types are checkable
+  | Lam TermC         -- we requrie every lambda-abstracted variable to be explicitly typed
   deriving (Show, Eq)
 
 data Name
