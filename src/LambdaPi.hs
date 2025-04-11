@@ -194,8 +194,8 @@ typeC i tau (Lam e) (Fun t t') =
   typeC (i + 1) ((Local i, HasType t) : tau) (substC 0 (Free (Local i)) e) t'
 typeC i tau _ _ = throwError "type mismatch"
 
-typeI_0 :: Context -> TermI -> Result Type
-typeI_0 = typeI 0
+typeI0 :: Context -> TermI -> Result Type
+typeI0 = typeI 0
 
 substI :: Int -> TermI -> TermI -> TermI
 substI i r (Ann e t) = Ann (substC i r e) t
@@ -206,3 +206,48 @@ substI i r (e :@: e') = substI i r e :@: substC i r e'
 substC :: Int -> TermI -> TermC -> TermC
 substC i r (Inf e) = Inf (substI i r e)
 substC i r (Lam e) = Lam (substC (i + 1) r e)
+
+-- the use of higher-order abstract syntax requires us to define a quote function that takes a value back to a term.
+quote0 :: Value -> TermC
+quote0 = quote 0
+
+quote :: Int -> Value -> TermC
+quote i (VLam f) = Lam (quote (i + 1) (f (vfree (Quote i))))
+quote i (VNeutral n) = Inf (quoteN i n)
+
+quoteN :: Int -> Neutral -> TermI
+quoteN i (NFree x) = boundfree i x
+quoteN i (NApp n v) = quoteN i n :@: quote i v
+
+boundfree :: Int -> Name -> TermI
+boundfree i (Quote k) = Bound (i - k - 1)
+boundfree i x = Free x
+
+id' = Lam (Inf (Bound 0))
+
+const' = Lam (Lam (Inf (Bound 1)))
+
+tfree a = TFree (Global a)
+
+free x = Inf (Free (Global x))
+
+term1 = Ann id' (Fun (tfree "a") (tfree "a")) :@: free "y"
+
+term2 = Ann const' (Fun (Fun (tfree "b") (tfree "b")) (Fun (tfree "a") (Fun (tfree "b") (tfree "b"))))
+
+env1 = [(Global "y", HasType (tfree "a")),
+        (Global "a", HasKind Star)]
+env2 = (Global "b", HasKind Star) : env1
+
+-- >>> quote0 (evalI term1 [])
+-- Inf (Free (Global "y"))
+
+-- >>> quote0 (evalI term2 [])
+-- Lam (Lam (Inf (Bound 1)))
+
+-- >>> typeI0 env1 term1
+-- Right (TFree (Global "a"))
+
+-- >>> typeI0 env2 term2
+-- Right (Fun (Fun (TFree (Global "b")) (TFree (Global "b"))) (Fun (TFree (Global "a")) (Fun (TFree (Global "b")) (TFree (Global "b")))))
+
