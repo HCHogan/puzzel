@@ -49,10 +49,10 @@ add (MkPi p1 n1) (MkPi p2 n2) = MkPi (p1 + p2) (n1 + n2)
 
 bigPI :: ParityInteger
 bigPI = go (piFromInteger 0) [1 .. 100000]
- where
-  go :: ParityInteger -> [Integer] -> ParityInteger
-  go acc [] = acc
-  go acc (x : xs) = go (add acc (piFromInteger x)) xs
+  where
+    go :: ParityInteger -> [Integer] -> ParityInteger
+    go acc [] = acc
+    go acc (x : xs) = go (add acc (piFromInteger x)) xs
 
 type ParityInteger# :: TYPE (TupleRep [LiftedRep, LiftedRep])
 newtype ParityInteger# = MkPi# (# Parity, Integer #)
@@ -81,13 +81,13 @@ integerFromPi# (MkPi# (# _, n #)) = n
 
 bigPI# :: () -> ParityInteger#
 bigPI# () = go (lpFromInteger 0) [1 .. 100000]
- where
-  -- go :: ParityInteger# -> [Integer] -> ParityInteger#                                       -- pass
-  go :: forall (a :: TYPE (TupleRep [LiftedRep, LiftedRep])). (LPNum a) => a -> [Integer] -> a -- pass
-  -- go :: forall (r :: RuntimeRep) (a :: TYPE r). LPNum a => a -> [Integer] -> a              -- error
-  -- we can never bind a variable to a type that does not have a fixed runtime representation
-  go acc [] = acc
-  go acc (x : xs) = go (lpPlus acc (lpFromInteger x)) xs
+  where
+    -- go :: ParityInteger# -> [Integer] -> ParityInteger#                                       -- pass
+    go :: forall (a :: TYPE (TupleRep [LiftedRep, LiftedRep])). (LPNum a) => a -> [Integer] -> a -- pass
+    -- go :: forall (r :: RuntimeRep) (a :: TYPE r). LPNum a => a -> [Integer] -> a              -- error
+    -- we can never bind a variable to a type that does not have a fixed runtime representation
+    go acc [] = acc
+    go acc (x : xs) = go (lpPlus acc (lpFromInteger x)) xs
 
 class LPNum (a :: TYPE r) where
   lpPlus :: a -> a -> a
