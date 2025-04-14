@@ -1,58 +1,62 @@
-cabal-version:      3.4
-name:               puzzel
-version:            0.1.0.0
-license:            BSD-2-Clause
-license-file:       LICENSE
-category:           Game
-build-type:         Simple
-extra-doc-files:    CHANGELOG.md
+cabal-version: 3.4
+name: puzzel
+version: 0.1.0.0
+license: BSD-2-Clause
+license-file: LICENSE
+category: Game
+build-type: Simple
+extra-doc-files: CHANGELOG.md
 
 common warnings
   ghc-options: -Wall
 
 library thoughts
   exposed-modules:
-    Lists
-    Traversable
-    FuncDep
-    Playground
-    Puzzel
-    MonoRestri
-    RecordUpdates
-    Impred
-    Imperative
-    Kinds
     CPS
-    MT
-    Len
-    ISO
     Com
     Eff
+    FuncDep
     GADT
-    THIH
-    MicroLens
-    LambdaPi
-    LevityPoly
+    ISO
+    Imperative
+    Impred
+    Kinds
     LambdaArrow
+    LambdaPi
+    Len
+    LevityPoly
+    Lists
+    MT
+    MicroLens
+    MonoRestri
+    Playground
+    Puzzel
+    RecordUpdates
+    THIH
+    Traversable
+
   hs-source-dirs:
     src
+
   build-depends:
-    base,
-    containers,
-    mtl,
-    lens,
-    type-operators,
-    parsec,
-    comonad,
-    effectful,
     aeson,
+    base,
+    comonad,
+    containers,
+    effectful,
+    lens,
+    mtl,
+    parsec,
     text,
+    type-operators,
+
   default-language: GHC2021
 
 executable puzzel
-  import:           warnings
-  main-is:          Main.hs
+  import: warnings
+  main-is: Main.hs
   build-depends:
-    base,
-  hs-source-dirs:   app
+    base
+
+  hs-source-dirs: app
   default-language: GHC2021

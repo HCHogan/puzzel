@@ -3,8 +3,11 @@ module LambdaPi where
 -- Polymorphism can be made explicit by interpreting it as a type abstraction. The identity function then takes two arguments: a type a and a value of a. Calls to the new identity function must explicitly instantiate the identity function with a type.
 
 data Vec0 a = Vec0
+
 newtype Vec1 a = Vec1 a
+
 data Vec2 a = Vec2 a a
+
 data Vec3 a = Vec3 a a a
 
 -- We would like to have a single family of types, indexed by the number of elements:
@@ -19,5 +22,9 @@ data Vec3 a = Vec3 a a a
 --  replicate :: ∀n: N. a → Vect n a
 --  A === N, B(n) === forall a. a -> Vect n a
 
-
-
+-- The evaluation now also extend to types. We must extend the abstract syntax of values accordingly.
+-- v, τ ::= n              -- neutral term
+--        | ∗              -- the type of types
+--        | ∀x :: τ.τ ′    -- dependent function space
+--        | λx → v         -- lambda abstraction
+-- We now use the symbol τ for values that play the role of types.

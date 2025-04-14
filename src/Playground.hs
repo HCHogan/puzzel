@@ -1,9 +1,43 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Playground (RegExp (..), parseRegExp) where
 
+import Control.Monad.Reader
+import Control.Monad.ST
+import Control.Monad.State
+import Control.Monad.Trans
+import Control.Monad.Writer
+import qualified Data.Text as T
+import Data.STRef
 import Text.Parsec
 import Text.Parsec.String (Parser)
-import Control.Monad.ST
-import Data.STRef
+
+newtype Stack a = Stack {unstack :: StateT Int (WriterT [Int] IO) a}
+
+foo :: Stack ()
+foo = Stack $ do
+  put 1
+  tell [2]
+  modify (+ 1)
+  liftIO $ print 3
+  return ()
+
+data MyContext = MyContext {ffoo :: String, bar :: Int}
+
+str :: T.Text
+str = "Far"
+
+computation :: Reader MyContext (Maybe String)
+computation = do
+  n <- asks bar
+  x <- asks ffoo
+  if n > 0 then return (Just x) else return Nothing
+
+
+-- >>> runReader computation $ MyContext "hello" 1
+-- Just "hello"
+
+evalStack :: Stack a -> IO [Int]
+evalStack m = execWriterT (evalStateT (unstack m) 0)
 
 class Collects s where
   insert :: s a -> a -> s a
@@ -73,7 +107,7 @@ regParser = try orParser <|> sequenceParser
 counterExample :: Int
 counterExample = runST $ do
   ref <- newSTRef 0
-  modifySTRef ref (+1)
+  modifySTRef ref (+ 1)
   readSTRef ref
 
 -- _ = runST (newSTRef 1)
