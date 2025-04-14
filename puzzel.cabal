@@ -33,6 +33,7 @@ library thoughts
     MicroLens
     LambdaPi
     LevityPoly
+    LambdaArrow
   hs-source-dirs:
     src
   build-depends:
