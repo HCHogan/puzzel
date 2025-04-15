@@ -21,10 +21,33 @@ data Vec3 a = Vec3 a a a
 --  ∀x:A. B(x)
 --  replicate :: ∀n: N. a → Vect n a
 --  A === N, B(n) === forall a. a -> Vect n a
+--
+--  We no longer have the need for a separate syntactic category of types or kinds, all constructs for all levels are now integrated into the term langauge.
+--  e, p, k ::= e :: p      -- annotated term
+--            | *           -- the type of types
+--            | ∀x :: p. p' -- dependent function space
+--            | x           -- variable
+--            | e e'        -- application
+--            | λx → e      -- lambda abstraction
 
 -- The evaluation now also extend to types. We must extend the abstract syntax of values accordingly.
--- v, τ ::= n              -- neutral term
---        | ∗              -- the type of types
---        | ∀x :: τ.τ ′    -- dependent function space
---        | λx → v         -- lambda abstraction
+-- v, τ ::= n               -- neutral term
+--        | ∗               -- the type of types
+--        | ∀x :: τ.τ ′     -- dependent function space
+--        | λx → v          -- lambda abstraction
 -- We now use the symbol τ for values that play the role of types.
+
+-- The context of λΠ is defined by the following rules.
+-- The precondition Γ ⊢ τ ::↓ * no longer refers to a apecial judgement for the well-formed type
+-- but to ensure that τ does not contain unknown variables.
+-- Γ ::= ε                  -- empty context
+--     | Γ, x :: τ          -- adding a variable
+--
+--
+-- ------------------------------
+--        valid(ε)
+--
+--
+--    valid(Γ)    Γ ⊢ τ ::↓ *
+-- ------------------------------
+--        valid(Γ, x :: τ)
