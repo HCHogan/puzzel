@@ -14,6 +14,7 @@ import Prelude hiding (drop, head, indx, lookup, replicate, tail, take, zipWith,
 
 data Color = Red | Green | Blue
 
+type Quantity :: Color -> Type
 newtype Quantity (unit :: Color) = Quantity Double
 
 addQuantity :: Quantity u -> Quantity u -> Quantity u
