@@ -29,6 +29,35 @@ data Vec3 a = Vec3 a a a
 --            | x           -- variable
 --            | e e'        -- application
 --            | λx → e      -- lambda abstraction
+data TermI
+  = Ann TermC TermC
+  | Star
+  | Pi TermC TermC
+  | Bound Int
+  | Free Name
+  | TermI :@: TermC
+  deriving (Show, Eq)
+
+data TermC
+  = Inf TermI
+  | Lam TermC
+
+
+data Value
+  = VLam (Value -> Value)
+  | VStar
+  | VPi Value (Value -> Value)
+  | VNeutral Neutral
+  deriving (Show, Eq)
+
+type Type = Value
+type Context = [(Name, Type)]
+
+data Name
+  = Global String
+  | Local Int
+  | Quote Int
+  deriving (Show, Eq)
 
 -- The evaluation now also extend to types. We must extend the abstract syntax of values accordingly.
 -- v, τ ::= n               -- neutral term
@@ -51,3 +80,6 @@ data Vec3 a = Vec3 a a a
 --    valid(Γ)    Γ ⊢ τ ::↓ *
 -- ------------------------------
 --        valid(Γ, x :: τ)
+
+-- the distinction between inferable and checkable terms ensures that the only place where we need to apply conversion rule is (ANN).
+
