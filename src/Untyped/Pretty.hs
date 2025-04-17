@@ -23,7 +23,7 @@ instance Pretty Expr where
   ppr _ (Var x) = text x
   ppr _ (Lit (LInt a)) = text (show a)
   ppr _ (Lit (LBool b)) = text (show b)
-  ppr p e@(App _ _) = parensIf (p > 0) (ppr p f <+> sep (map (ppr (p + 1)) xs))
+  ppr p e@(App _ _) = parensIf (p > 0) (ppr p f <+> sep (map (ppr (p + 1)) xs)) -- left associative
    where
     (f, xs) = viewApp e
   ppr p e@(Lam _ _) = parensIf (p > 0) $ char '\\' <> hsep vars <+> text "." <+> body
@@ -48,3 +48,7 @@ viewApp _ = error "not application"
 
 ppexpr :: Expr -> String
 ppexpr = render . ppr 0
+
+-- >>> ppexpr (Lam "y" (Lam "x" (App (App (Var "x") (Var "y")) (Lit (LInt 1)))))
+-- "\\y x . (x y 1)"
+
