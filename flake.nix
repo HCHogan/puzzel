@@ -1,34 +1,57 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    flake-utils.url = "github:numtide/flake-utils";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11";
+    flake-utils = {
+      url = "github:numtide/flake-utils";
+    };
+    rust-overlay = {
+      url = "github:oxalica/rust-overlay";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = {
     self,
     nixpkgs,
     flake-utils,
+    rust-overlay,
   }:
     flake-utils.lib.eachDefaultSystem (
       system: let
-        name = "puzzel";
+        overlays = [(import rust-overlay)];
+        pkgs = import nixpkgs {
+          inherit system overlays;
+        };
+        name = "template";
         src = ./.;
-        pkgs = nixpkgs.legacyPackages.${system};
       in {
         packages.default = derivation {
           inherit system name src;
           builder = with pkgs; "${bash}/bin/bash";
-          args = ["-c" "cabal build"];
+          args = ["-c" "echo foo > $out"];
         };
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
-            haskell.compiler.ghc9101
-            haskell.packages.ghc9101.haskell-language-server
-            hlint
             clang
             clang-tools
+            cmake
+            ninja
+            gnumake
+            lldb
+
+            haskell.compiler.ghc9101
+            haskell.packages.ghc9101.haskell-language-server
             cabal-install
-            hlint
+
+            (rust-bin.nightly.latest.default.override
+              {
+                extensions = [
+                  "rust-src"
+                  "rust-analyzer"
+                  "llvm-tools"
+                ];
+                # targets = [];
+              })
           ];
           shellHook = ''
             export SHELL=$(which zsh)
