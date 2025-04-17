@@ -75,18 +75,18 @@ evalI (Free x) d = vfree x
 -- the i-th position corresponds to the value of variable i
 evalI (Bound i) d = d !! i
 evalI (e :@: e') d = vapp (evalI e d) (evalC e' d)
-  where
-    vapp :: Value -> Value -> Value
-    -- When left subterm does yield a lambda abs, we β-reduce:
-    -- e ⇓ λx → v   v[x ↦ e′] ⇓ v′
-    -- ———————————————————————----
-    --      e e′ ⇓ v′
-    vapp (VLam f) v = f v
-    -- When left subterm yield a neutral term, the evaluation cannot proceed:
-    -- e ⇓ n   e′ ⇓ v′
-    -- ———————————————————
-    --   e e′ ⇓ n v′
-    vapp (VNeutral n) v = VNeutral (NApp n v)
+ where
+  vapp :: Value -> Value -> Value
+  -- When left subterm does yield a lambda abs, we β-reduce:
+  -- e ⇓ λx → v   v[x ↦ e′] ⇓ v′
+  -- ———————————————————————----
+  --      e e′ ⇓ v′
+  vapp (VLam f) v = f v
+  -- When left subterm yield a neutral term, the evaluation cannot proceed:
+  -- e ⇓ n   e′ ⇓ v′
+  -- ———————————————————
+  --   e e′ ⇓ n v′
+  vapp (VNeutral n) v = VNeutral (NApp n v)
 
 evalC :: TermC -> Env -> Value
 evalC (Inf i) d = evalI i d
@@ -236,11 +236,16 @@ term1 = Ann id' (Fun (tfree "a") (tfree "a")) :@: free "y"
 term2 = Ann const' (Fun (Fun (tfree "b") (tfree "b")) (Fun (tfree "a") (Fun (tfree "b") (tfree "b"))))
 
 env1 =
-  [ (Global "y", HasType (tfree "a")),
-    (Global "a", HasKind Star)
+  [ (Global "y", HasType (tfree "a"))
+  , (Global "a", HasKind Star)
   ]
 
 env2 = (Global "b", HasKind Star) : env1
+
+s f g x = f x (g x)
+k x y = x
+i x = x
+skk = s k k
 
 -- >>> quote0 (evalI term1 [])
 -- Inf (Free (Global "y"))

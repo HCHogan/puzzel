@@ -34,6 +34,11 @@ library thoughts
     RecordUpdates
     THIH
     Traversable
+    Untyped.Syntax
+    Untyped.Repl
+    Untyped.Eval
+    Untyped.Parser
+    Untyped.Pretty
 
   hs-source-dirs:
     src
@@ -49,6 +54,8 @@ library thoughts
     parsec,
     text,
     type-operators,
+    pretty,
+    haskeline,
 
   default-language: GHC2021
 

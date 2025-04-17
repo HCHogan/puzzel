@@ -55,8 +55,8 @@ data TermC
 data Value
   = VLam (Value -> Value)
   | VStar
-  -- x is visible in B (Value -> Value), not visible in A (Value)
-  | VPi Value (Value -> Value)
+  | -- x is visible in B (Value -> Value), not visible in A (Value)
+    VPi Value (Value -> Value)
   | VNeutral Neutral
 
 data Neutral
@@ -94,18 +94,18 @@ evalI (Bound i) d = d !! i
 -- ∀x :: ρ.ρ' ⇓ ∀x :: τ.τ'
 evalI (Pi t t') d = VPi (evalC t d) (\x -> evalC t' (x : d))
 evalI (e :@: e') d = vapp (evalI e d) (evalC e' d)
-  where
-    -- When left subterm does yield a lambda abs, we β-reduce:
-    -- e ⇓ λx → v   v[x ↦ e′] ⇓ v′
-    -- ———————————————————————----
-    --      e e′ ⇓ v′
-    vapp :: Value -> Value -> Value
-    vapp (VLam f) v = f v
-    -- When left subterm yield a neutral term, the evaluation cannot proceed:
-    -- e ⇓ n   e′ ⇓ v′
-    -- ———————————————————
-    --   e e′ ⇓ n v′
-    vapp (VNeutral n) v = VNeutral (NApp n v)
+ where
+  -- When left subterm does yield a lambda abs, we β-reduce:
+  -- e ⇓ λx → v   v[x ↦ e′] ⇓ v′
+  -- ———————————————————————----
+  --      e e′ ⇓ v′
+  vapp :: Value -> Value -> Value
+  vapp (VLam f) v = f v
+  -- When left subterm yield a neutral term, the evaluation cannot proceed:
+  -- e ⇓ n   e′ ⇓ v′
+  -- ———————————————————
+  --   e e′ ⇓ n v′
+  vapp (VNeutral n) v = VNeutral (NApp n v)
 
 evalC :: TermC -> Env -> Value
 evalC (Inf i) d = evalI i d
@@ -115,6 +115,7 @@ evalC (Inf i) d = evalI i d
 evalC (Lam t) d = VLam (\x -> evalC t (x : d))
 
 type Result a = Either String a
+
 -- The context of λΠ is defined by the following rules.
 -- The precondition Γ ⊢ τ ::↓ * no longer refers to a apecial judgement for the well-formed type
 -- but to ensure that τ does not contain unknown variables.
@@ -132,7 +133,6 @@ type Result a = Either String a
 
 -- the distinction between inferable and checkable terms ensures that the only place where we need to apply conversion rule is (ANN).
 type Context = [(Name, Type)]
-
 
 -- (CHK)
 -- Γ ⊢ e ::↑ τ
@@ -164,7 +164,7 @@ typeI i tau Star = return VStar
 -- Γ ⊢ ∀x :: ρ.ρ' ::↑ *
 typeI i tau (Pi p p') = do
   let t = evalC p []
-  typeC (i + 1) ((Local i, t):tau) (substC 0 (Free (Local i))p') VStar
+  typeC (i + 1) ((Local i, t) : tau) (substC 0 (Free (Local i)) p') VStar
   return VStar
 -- (VAR)
 -- Γ(x) = τ
@@ -187,6 +187,7 @@ typeI i tau (e :@: e') = do
 
 typeC :: Int -> Context -> TermC -> Type -> Result ()
 typeC = undefined
+
 -- typeC i tau (Inf e) v = do
 --   v' <- typeI i tau e
 --   unless (quote)
@@ -196,3 +197,12 @@ substC = undefined
 
 substI :: Int -> TermI -> TermI -> TermI
 substI = undefined
+
+quote :: Int -> Value -> TermC
+quote = undefined
+
+quote0 :: Value -> TermC
+quote0 = quote 0
+
+neutrualQuote :: Int -> Neutral -> TermI
+neutrualQuote = undefined

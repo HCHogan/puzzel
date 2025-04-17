@@ -38,6 +38,7 @@
             ninja
             gnumake
             lldb
+            hlint
 
             haskell.compiler.ghc9101
             haskell.packages.ghc9101.haskell-language-server
