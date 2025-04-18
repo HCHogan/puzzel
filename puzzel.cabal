@@ -39,6 +39,7 @@ library thoughts
     Untyped.Eval
     Untyped.Parser
     Untyped.Pretty
+    STLC.Arith
 
   hs-source-dirs:
     src
