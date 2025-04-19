@@ -1,7 +1,7 @@
 module STLC.Arith where
 
-import Data.Maybe
 import Control.Monad.Except
+import Data.Maybe
 
 -- e ::= True
 --       False
@@ -24,9 +24,7 @@ nf :: Expr -> Expr
 nf t = maybe t nf (eval1 t)
 
 eval :: Expr -> Maybe Expr
-eval t = case isVal (nf t) of
-  True -> Just (nf t)
-  False -> Nothing -- term is stuck
+eval t = if isVal (nf t) then Just (nf t) else Nothing -- term is stuck
 
 isVal :: Expr -> Bool
 isVal Tr = True
@@ -86,15 +84,12 @@ typeof (If a b c) = do
   ta <- typeof a
   tb <- typeof b
   tc <- typeof c
-  if ta /= TBool 
-  then throwError $ TypeMismatch ta TBool
-  else
-    if tb /= tc
-    then throwError $ TypeMismatch ta tb
-    else return tc
-typeof Tr = return TBool  
+  if ta /= TBool
+    then throwError $ TypeMismatch ta TBool
+    else
+      if tb /= tc
+        then throwError $ TypeMismatch ta tb
+        else return tc
+typeof Tr = return TBool
 typeof Fl = return TBool
 typeof Zero = return TNat
-
-
-

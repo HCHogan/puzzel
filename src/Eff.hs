@@ -1,9 +1,13 @@
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE PartialTypeSignatures #-}
 
 module Eff () where
 
 import Control.Lens
 import Effectful
+import Effectful.Dispatch.Static (HasCallStack)
+import Effectful.Error.Static
 import Effectful.State.Static.Local
 import Effectful.Writer.Static.Local
 
@@ -30,3 +34,17 @@ emain = runEff $ do
   finalState <- runState initialState modifyUserName
   liftIO $ print finalState
 
+testWriter' :: (HasCallStack, Writer String :> es) => String -> Eff es ()
+testWriter' s = tell "fuck"
+
+testWriter :: (HasCallStack, Writer String :> es) => String -> Eff es ()
+testWriter s = tell "fuck"
+
+testStateError :: (HasCallStack, Writer String :> es, Error String :> es) => String -> Eff es ()
+testStateError s = do
+  tell "fuck"
+  testWriter "bitch"
+  throwError "shit"
+
+runShit :: (HasCallStack) => (Either String (), String)
+runShit = runPureEff $ runWriter $ runErrorNoCallStack $ testStateError "landepen"
