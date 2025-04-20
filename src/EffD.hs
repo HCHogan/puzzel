@@ -10,6 +10,7 @@ import Effectful.Exception
 import Effectful.State.Static.Local
 import System.Console.Haskeline
 import System.IO qualified as IO
+import Prelude hiding (readFile)
 
 data FileSystem :: Effect where
   ReadFile :: FilePath -> FileSystem m String
@@ -33,7 +34,7 @@ runFileSystemIO = interpret $ \_ -> \case
   adapt m = liftIO m `catchIO` \e -> throwError . FsError $ show e
 
 runFileSystemPure ::
-  (IOE :> es, Error FsError :> es) =>
+  (Error FsError :> es) =>
   M.Map FilePath String -> Eff (FileSystem : es) a -> Eff es a
 runFileSystemPure fs = reinterpret (evalState fs) $ \_ -> \case
   ReadFile path ->
@@ -42,4 +43,23 @@ runFileSystemPure fs = reinterpret (evalState fs) $ \_ -> \case
       Nothing -> throwError . FsError $ "File not found: " ++ path
   WriteFile path contents -> modify $ M.insert path contents
 
-data Haskeline :: Effect where
+action :: (FileSystem :> es) => Eff es Bool
+action = do
+  file <- readFile "effectful-core.cabal"
+  return $ not (null file)
+
+-- >>> runPureEff . runErrorNoCallStack @FsError . runFileSystemPure M.empty $ action
+-- Left (FsError "File not found: effectful-core.cabal")
+
+data Haskeline :: Effect
+
+data Profiling :: Effect where
+  Profile :: String -> m a -> Profiling m a
+
+type instance DispatchOf Profiling = Dynamic
+
+profile :: (HasCallStack, Profiling :> es) => String -> Eff es a -> Eff es a
+profile label action = send (Profile label action)
+
+
+
