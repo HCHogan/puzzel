@@ -15,6 +15,7 @@ library thoughts
     CPS
     Com
     Eff
+    EffD
     FuncDep
     GADT
     ISO
@@ -59,7 +60,7 @@ library thoughts
     pretty,
     haskeline,
 
-  default-language: GHC2021
+  default-language: GHC2024
 
 executable puzzel
   import: warnings
@@ -68,4 +69,4 @@ executable puzzel
     base
 
   hs-source-dirs: app
-  default-language: GHC2021
+  default-language: GHC2024

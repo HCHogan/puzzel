@@ -48,3 +48,5 @@ testStateError s = do
 
 runShit :: (HasCallStack) => (Either String (), String)
 runShit = runPureEff $ runWriter $ runErrorNoCallStack $ testStateError "landepen"
+
+
