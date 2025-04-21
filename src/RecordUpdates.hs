@@ -1,7 +1,3 @@
-{-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE StandaloneDeriving #-}
-{-# LANGUAGE TypeFamilies #-}
-
 module RecordUpdates () where
 
 data Rec a = MkRec {foo :: Int, bar :: a, baz :: Double}

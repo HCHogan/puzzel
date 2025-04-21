@@ -1,5 +1,3 @@
-{-# LANGUAGE DataKinds #-}
-
 module STLC.Stlc where
 
 import Effectful

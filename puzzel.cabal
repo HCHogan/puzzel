@@ -61,6 +61,11 @@ library thoughts
     haskeline,
 
   default-language: GHC2024
+  default-extensions:
+    TypeFamilies
+    FunctionalDependencies
+    OverloadedRecordDot
+    RecordWildCards
 
 executable puzzel
   import: warnings

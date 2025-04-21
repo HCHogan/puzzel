@@ -1,6 +1,3 @@
-{-# LANGUAGE OverloadedRecordDot #-}
-{-# LANGUAGE RecordWildCards #-}
-
 module Puzzel (answers) where
 
 import Control.Monad
