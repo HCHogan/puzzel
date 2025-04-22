@@ -42,6 +42,8 @@ library thoughts
     Untyped.Pretty
     STLC.Arith
     STLC.Stlc
+    Eval.CallByNeed
+    Eval.HOAS
 
   hs-source-dirs:
     src
