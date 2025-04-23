@@ -44,6 +44,7 @@ library thoughts
     STLC.Stlc
     Eval.CallByNeed
     Eval.HOAS
+    Eval.PHOAS
 
   hs-source-dirs:
     src
