@@ -1,6 +1,7 @@
 module HM.Syntax where
 
-import Data.Map qualified as M
+import Data.HashMap.Strict qualified as M
+import Data.Set qualified as S
 import Effectful
 import Effectful.Dispatch.Static
 import Effectful.Error.Static
@@ -60,7 +61,19 @@ extend (TypeEnv e) (x, s) = TypeEnv $ M.insert x s e
 
 data TypeError
 
-data Subst
+type Subst = M.Map TVar Type
 
 runInfer :: (Error TypeError :> es, State TypeEnv :> es) => Eff es (Subst, Type) -> Either TypeError Scheme
 runInfer = undefined
+
+nullSubst :: Subst
+nullSubst = M.empty
+
+compose :: Subst -> Subst -> Subst
+s1 `compose` s2 = M.map (apply s1) s2 `M.union` s1
+
+class Substitutable a where
+  apply :: Subst -> a -> a
+  ftv :: a -> S.Set TVar
+
+
