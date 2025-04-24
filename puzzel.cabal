@@ -46,6 +46,7 @@ library thoughts
     Eval.HOAS
     Eval.PHOAS
     Eval.IO
+    HM.Syntax
 
   hs-source-dirs:
     src
