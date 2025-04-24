@@ -42,7 +42,9 @@ fromVLit (VLit i) = i
 fromVLit _ = error "Not a literal"
 
 eval :: Expr -> Value
-eval e = ev (unExpr e) where
+eval e = ev (unExpr e)
+ where
+  ev :: ExprP Value -> Value
   ev (LamP f) = VFun (ev . f)
   ev (VarP v) = v
   ev (AppP e1 e2) = fromVFun (ev e1) (ev e2)
