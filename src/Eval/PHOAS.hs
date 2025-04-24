@@ -33,6 +33,8 @@ data Value
   = VLit Integer
   | VFun (Value -> Value)
 
+-- normally a higher level typecheck will reject the program before we reach here
+-- so we use incomplete pattern here
 fromVFun :: Value -> (Value -> Value)
 fromVFun (VFun f) = f
 fromVFun _ = error "Not a function"
@@ -49,5 +51,6 @@ eval e = ev (unExpr e)
   ev (VarP v) = v
   ev (AppP e1 e2) = fromVFun (ev e1) (ev e2)
   ev (LitP n) = VLit n
+
 
 

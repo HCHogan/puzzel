@@ -45,6 +45,7 @@ library thoughts
     Eval.CallByNeed
     Eval.HOAS
     Eval.PHOAS
+    Eval.IO
 
   hs-source-dirs:
     src
