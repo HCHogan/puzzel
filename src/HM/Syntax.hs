@@ -64,6 +64,9 @@ extend :: TypeEnv -> (Var, Scheme) -> TypeEnv
 extend (TypeEnv e) (x, s) = TypeEnv $ M.insert x s e
 
 data TypeError
+  = InfiniteType TVar Type
+  | UnificationFail Type Type
+  deriving (Show, Eq)
 
 type Subst = M.Map TVar Type
 
@@ -144,5 +147,45 @@ fresh = do
     [θ1] τ2 ~ [θ1] τ2' : θ2
     -----------------------------
     τ1 -> τ2 ~ τ1' -> τ2' : θ2 ∘ θ1
+
 -}
+
+-- the type variable a must not occur free in tau.
+-- note that unifying a -> b and a is exactly what we would have to do if we tried to type check the
+-- omega combinator \x -> x x
+occursCheck :: (Substitutable a) => TVar -> a -> Bool
+occursCheck a s = S.member a (ftv s)
+
+unify :: (Error TypeError :> es) => Type -> Type -> Eff es Subst
+unify (l `TArr` r) (l' `TArr` r') = do
+  s1 <- unify l l'
+  s2 <- unify (apply s1 r) (apply s1 r')
+  return (s1 `compose` s2)
+unify (TVar a) t = bind a t
+unify t (TVar a) = bind a t
+unify (TCon a) (TCon b) | a == b = return nullSubst
+unify t1 t2 = throwError $ UnificationFail t1 t2
+
+bind :: (Error TypeError :> es) => TVar -> Type -> Eff es Subst
+bind a t
+  | t == TVar a = return nullSubst
+  | occursCheck a t = throwError $ InfiniteType a t
+  | otherwise = return $ M.singleton a t
+
+{-
+  Generalization and Instantiation (Hindley–Milner):
+
+    -- T-Gen
+    Γ ⊢ e : σ        ᾱ ∉ ftv(Γ)
+    -----------------------------
+    Γ ⊢ e : ∀ ᾱ. σ
+
+    -- T-Inst
+    Γ ⊢ e : σ₁       σ₁ ⊑ σ₂
+    -----------------------------
+    Γ ⊢ e : σ₂
+-}
+
+
+
 
