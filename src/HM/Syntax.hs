@@ -121,35 +121,6 @@ fresh = do
   modify (count +~ 1)
   return $ TVar $ TV (letters !! idx)
 
-{-
-  Unification rules for our little HM language:
-
-    -- Uni-Const
-    c ~ c : []
-
-    -- Uni-Var
-    α ~ α : []
-
-    -- Uni-VarLeft  (requires α ∉ ftv(τ))
-    α ~ τ : [τ/α]
-
-    -- Uni-VarRight (requires α ∉ ftv(τ))
-    τ ~ α : [τ/α]
-
-    -- Uni-Con
-    τ1 ~ τ1' : θ1
-    [θ1] τ2 ~ [θ1] τ2' : θ2
-    -------------------------
-    τ1 τ2 ~ τ1' τ2' : θ2 ∘ θ1
-
-    -- Uni-Arrow
-    τ1 ~ τ1' : θ1
-    [θ1] τ2 ~ [θ1] τ2' : θ2
-    -----------------------------
-    τ1 -> τ2 ~ τ1' -> τ2' : θ2 ∘ θ1
-
--}
-
 -- the type variable a must not occur free in tau.
 -- note that unifying a -> b and a is exactly what we would have to do if we tried to type check the
 -- omega combinator \x -> x x
@@ -157,12 +128,20 @@ occursCheck :: (Substitutable a) => TVar -> a -> Bool
 occursCheck a s = S.member a (ftv s)
 
 unify :: (Error TypeError :> es) => Type -> Type -> Eff es Subst
+-- Uni-Arrow
+-- τ1 ~ τ1' : θ1 [θ1] τ2 ~ [θ1] τ2' : θ2
+-- -----------------------------
+-- τ1 -> τ2 ~ τ1' -> τ2' : θ2 ∘ θ1
 unify (l `TArr` r) (l' `TArr` r') = do
   s1 <- unify l l'
   s2 <- unify (apply s1 r) (apply s1 r')
   return (s1 `compose` s2)
+-- Uni-Var   α ~ α : []
+-- Uni-VarLeft  (requires α ∉ ftv(τ)  α ~ τ : [τ/α]
 unify (TVar a) t = bind a t
+-- Uni-VarRight (requires α ∉ ftv(τ)) τ ~ α : [τ/α]
 unify t (TVar a) = bind a t
+-- Uni-Const c ~ c : []
 unify (TCon a) (TCon b) | a == b = return nullSubst
 unify t1 t2 = throwError $ UnificationFail t1 t2
 
