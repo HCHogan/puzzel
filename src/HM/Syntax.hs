@@ -60,23 +60,28 @@ typeBool = TCon "Bool"
 newtype TypeEnv = TypeEnv (M.Map Var Scheme)
   deriving (Semigroup, Monoid)
 
+-- lookupEnv :: TypeEnv -> Var -> Maybe Scheme
+-- lookupEnv (TypeEnv m) v = M.lookup m v
+
 extend :: TypeEnv -> (Var, Scheme) -> TypeEnv
 extend (TypeEnv e) (x, s) = TypeEnv $ M.insert x s e
 
 data TypeError
   = InfiniteType TVar Type
   | UnificationFail Type Type
+  | UnboundVariable String
   deriving (Show, Eq)
 
 type Subst = M.Map TVar Type
 
+-- use effectful instead of:
 -- type Infer a = ExceptT TypeError (State Unique) a
 
 newtype Unique = Unique {_count :: Int} deriving (Show, Eq)
 
 makeLenses ''Unique
 
-runInfer :: (Error TypeError :> es, State TypeEnv :> es) => Eff es (Subst, Type) -> Either TypeError Scheme
+runInfer :: (HasCallStack, Error TypeError :> es, State TypeEnv :> es) => Eff es (Subst, Type) -> Either TypeError Scheme
 runInfer = undefined
 
 nullSubst :: Subst
@@ -127,7 +132,7 @@ fresh = do
 occursCheck :: (Substitutable a) => TVar -> a -> Bool
 occursCheck a s = S.member a (ftv s)
 
-unify :: (Error TypeError :> es) => Type -> Type -> Eff es Subst
+unify :: (HasCallStack, Error TypeError :> es) => Type -> Type -> Eff es Subst
 -- Uni-Arrow
 -- τ1 ~ τ1' : θ1 [θ1] τ2 ~ [θ1] τ2' : θ2
 -- -----------------------------
@@ -145,26 +150,68 @@ unify t (TVar a) = bind a t
 unify (TCon a) (TCon b) | a == b = return nullSubst
 unify t1 t2 = throwError $ UnificationFail t1 t2
 
-bind :: (Error TypeError :> es) => TVar -> Type -> Eff es Subst
+bind :: (HasCallStack, Error TypeError :> es) => TVar -> Type -> Eff es Subst
 bind a t
   | t == TVar a = return nullSubst
   | occursCheck a t = throwError $ InfiniteType a t
   | otherwise = return $ M.singleton a t
 
-{-
-  Generalization and Instantiation (Hindley–Milner):
+-- Generalization and Instantiation (Hindley–Milner):
+-- -- T-Inst
+-- Γ ⊢ e : σ₁       σ₁ ⊑ σ₂
+-- -----------------------------
+-- Γ ⊢ e : σ₂
+instantiate :: (State Unique :> es) => Scheme -> Eff es Type
+instantiate (Forall as t) = do
+  as' <- traverse (const fresh) as -- fresh need State Unique :> es here
+  let s = M.fromList $ zip as as'
+  return $ apply s t
 
-    -- T-Gen
-    Γ ⊢ e : σ        ᾱ ∉ ftv(Γ)
-    -----------------------------
-    Γ ⊢ e : ∀ ᾱ. σ
+--  -- T-Gen
+--  Γ ⊢ e : σ        ᾱ ∉ ftv(Γ)
+--  -----------------------------
+--  Γ ⊢ e : ∀ ᾱ. σ
+generalize :: TypeEnv -> Type -> Scheme
+generalize env t = Forall as t
+ where
+  as = S.toList $ ftv t `S.difference` ftv env
 
-    -- T-Inst
-    Γ ⊢ e : σ₁       σ₁ ⊑ σ₂
-    -----------------------------
-    Γ ⊢ e : σ₂
--}
+-- Typing Rules for HM Type System:
 
+-- (T-Let)
+-- If Γ ⊢ e₁ : σ and Γ, x : σ ⊢ e₂ : τ, then Γ ⊢ let x = e₁ in e₂ : τ
 
+-- (T-Gen)
+-- If Γ ⊢ e : σ and α ∉ ftv(Γ), then Γ ⊢ e : ∀α. σ
 
+-- (T-Inst)
+-- If Γ ⊢ e : σ₁ and σ₁ ⊑ σ₂, then Γ ⊢ e : σ₂
+
+lookupEnv :: (HasCallStack, State Unique :> es, Error TypeError :> es) => TypeEnv -> Var -> Eff es (Subst, Type)
+lookupEnv (TypeEnv e) v = case M.lookup v e of
+  Nothing -> throwError $ UnboundVariable (show v)
+  Just s -> do
+    t <- instantiate s
+    return (nullSubst, t)
+
+infer :: (HasCallStack, State Unique :> es, Error TypeError :> es) => TypeEnv -> Expr -> Eff es (Subst, Type)
+infer env = \case
+  -- (T-Var)
+  -- If x : σ ∈ Γ, then Γ ⊢ x : σ
+  Var x -> lookupEnv env x
+  -- (T-Lam)
+  -- If Γ, x : τ₁ ⊢ e : τ₂, then Γ ⊢ λx. e : τ₁ → τ₂
+  Lam x e -> do
+    tv <- fresh
+    let env' = env `extend` (x, Forall [] tv)
+    (s1, t1) <- infer env' e
+    return (s1, apply s1 tv `TArr` t1)
+  -- (T-App)
+  -- If Γ ⊢ e₁ : τ₁ → τ₂ and Γ ⊢ e₂ : τ₁, then Γ ⊢ e₁ e₂ : τ₂
+  App e1 e2 -> do
+    tv <- fresh
+    (s1, t1) <- infer env e1
+    (s2, t2) <- infer (apply s1 env) e2
+    s3 <- unify (apply s2 t1) (TArr t2 tv)
+    undefined
 
