@@ -47,6 +47,14 @@ library thoughts
     Eval.PHOAS
     Eval.IO
     HM.Syntax
+    HM.Repl
+    HM.Parser
+    HM.Lexer
+    HM.Pretty
+    HM.Infer
+    HM.Eval
+    HM.Type
+    HM.InferC
 
   hs-source-dirs:
     src
