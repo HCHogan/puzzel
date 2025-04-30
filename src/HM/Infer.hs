@@ -10,8 +10,15 @@ import Effectful
 import Effectful.Dispatch.Static
 import Effectful.Error.Static
 import Effectful.State.Static.Local
+
 import HM.Syntax
 import HM.Type
+
+data TypeError
+  = InfiniteType TVar Type
+  | UnificationFail Type Type
+  | UnboundVariable String
+  deriving (Eq)
 
 newtype TypeEnv = TypeEnv (M.Map Var Scheme)
   deriving (Semigroup, Monoid)
@@ -21,12 +28,6 @@ extend (TypeEnv e) (x, s) = TypeEnv $ M.insert x s e
 
 emptyTypeEnv :: TypeEnv
 emptyTypeEnv = TypeEnv M.empty
-
-data TypeError
-  = InfiniteType TVar Type
-  | UnificationFail Type Type
-  | UnboundVariable String
-  deriving (Show, Eq)
 
 type Subst = M.Map TVar Type
 
@@ -112,12 +113,12 @@ unify (TVar a) t = bind a t
 unify t (TVar a) = bind a t
 -- Uni-Const c ~ c : []
 unify (TCon a) (TCon b) | a == b = return nullSubst
-unify t1 t2 = throwError $ UnificationFail t1 t2
+unify t1 t2 = throwError_ $ UnificationFail t1 t2
 
 bind :: (HasCallStack, Error TypeError :> es) => TVar -> Type -> Eff es Subst
 bind a t
   | t == TVar a = return nullSubst
-  | occursCheck a t = throwError $ InfiniteType a t
+  | occursCheck a t = throwError_ $ InfiniteType a t
   | otherwise = return $ M.singleton a t
 
 -- Generalization and Instantiation (Hindley–Milner):
@@ -151,7 +152,7 @@ ops =
 
 lookupEnv :: (HasCallStack, State Unique :> es, Error TypeError :> es) => TypeEnv -> Var -> Eff es (Subst, Type)
 lookupEnv (TypeEnv e) v = case M.lookup v e of
-  Nothing -> throwError $ UnboundVariable (show v)
+  Nothing -> throwError_ $ UnboundVariable (show v)
   Just s -> do
     t <- instantiate s
     return (nullSubst, t)

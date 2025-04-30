@@ -50,8 +50,7 @@ lambda = do
 fix :: Parser Expr
 fix = do
   reserved RWFix
-  x <- expr
-  return $ Fix x
+  Fix <$> expr
 
 letin :: Parser Expr
 letin = do
@@ -60,8 +59,7 @@ letin = do
   reservedOp OpEq
   e1 <- expr
   reserved RWIn
-  e2 <- expr
-  return $ Let x e1 e2
+  Let x e1 <$> expr
 
 -- Bogus: use let + fix
 letrecin :: Parser Expr
@@ -72,8 +70,7 @@ letrecin = do
   reservedOp OpEq
   e1 <- expr
   reserved RWIn
-  e2 <- expr
-  return $ Let x e1 e2
+  Let x e1 <$> expr
 
 ifthen :: Parser Expr
 ifthen = do
@@ -82,8 +79,7 @@ ifthen = do
   reserved RWThen
   tr <- expr
   reserved RWElse
-  fl <- expr
-  return $ If cond tr fl
+  If cond tr <$> expr
 
 aexp :: Parser Expr
 aexp =
@@ -104,7 +100,7 @@ term = do
   return $ foldl App x xs
 
 infixOp :: ReservedOp -> (a -> a -> a) -> Ex.Assoc -> Op a
-infixOp op f asso = Ex.Infix (reservedOp op *> return f) asso
+infixOp op f = Ex.Infix (reservedOp op $> f)
 
 opTable :: Operators Expr
 opTable =
@@ -128,7 +124,7 @@ letdecl = do
   args <- many identifier
   reservedOp OpEq
   body <- expr
-  return $ (name, foldr Lam body args)
+  return (name, foldr Lam body args)
 
 letrecdecl :: Parser Binding
 letrecdecl = do
@@ -137,7 +133,7 @@ letrecdecl = do
   name <- identifier
   args <- many identifier
   body <- expr
-  return $ (name, Fix $ foldr Lam body (name : args))
+  return (name, Fix $ foldr Lam body (name : args))
 
 val :: Parser Binding
 val = (,) "it" <$> expr
@@ -152,7 +148,7 @@ modl :: Parser [Binding]
 modl = many top
 
 parseExpr :: L.Text -> Either ParseError Expr
-parseExpr input = parse (contents expr) "<stdin>" input
+parseExpr = parse (contents expr) "<stdin>"
 
 parseModule :: FilePath -> L.Text -> Either ParseError [Binding]
-parseModule fname input = parse (contents modl) fname input
+parseModule = parse (contents modl)

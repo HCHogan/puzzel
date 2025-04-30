@@ -1,5 +1,8 @@
 module HM.Type where
 
+import HM.Syntax
+import Data.Map qualified as M
+
 newtype TVar = TV String
   deriving (Show, Eq, Ord)
 
@@ -19,3 +22,4 @@ typeInt = TCon "Int"
 
 typeBool :: Type
 typeBool = TCon "Bool"
+
