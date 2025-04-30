@@ -62,4 +62,3 @@ profile :: (HasCallStack, Profiling :> es) => String -> Eff es a -> Eff es a
 profile label action = send (Profile label action)
 
 
-
