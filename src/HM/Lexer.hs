@@ -42,8 +42,8 @@ data ReservedOp
   | OpPlus -- "+"
   | OpTimes -- "*"
   | OpMinus -- "-"
-  | OpEq -- "="
   | OpEqEq -- "="
+  | OpEq -- "="
   deriving (Eq, Ord, Show, Enum, Bounded)
 
 reservedWordToString :: ReservedWord -> String
@@ -65,8 +65,8 @@ reservedOpToString = \case
   OpPlus -> "+"
   OpTimes -> "*"
   OpMinus -> "-"
-  OpEq -> "="
   OpEqEq -> "=="
+  OpEq -> "="
 
 reservedWords :: [String]
 reservedWords = reservedWordToString <$> [minBound .. maxBound]

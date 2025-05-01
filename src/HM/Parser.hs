@@ -132,6 +132,7 @@ letrecdecl = do
   reserved RWRec
   name <- identifier
   args <- many identifier
+  reservedOp OpEq
   body <- expr
   return (name, Fix $ foldr Lam body (name : args))
 

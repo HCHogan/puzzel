@@ -16,13 +16,13 @@ class Pretty p where
   ppr :: Int -> p -> Doc
 
 instance Pretty Var where
-  ppr _ x = text x
+  ppr _ = text
 
 instance Pretty TVar where
   ppr _ (TV x) = text x
 
 instance Pretty Type where
-  ppr p (TArr a b) = (parensIf (isArrow a) (ppr p a)) <+> text "->" <+> ppr p b
+  ppr p (TArr a b) = parensIf (isArrow a) (ppr p a) <+> text "->" <+> ppr p b
    where
     isArrow TArr{} = True
     isArrow _ = False
@@ -83,4 +83,4 @@ ppdecl :: (String, Expr) -> String
 ppdecl (a, b) = "let " ++ a ++ " = " ++ ppexpr b
 
 ppenv :: TypeEnv -> [String]
-ppenv (TypeEnv env) = fmap ppsignature $ M.toList env
+ppenv (TypeEnv env) = ppsignature <$> M.toList env
