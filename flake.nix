@@ -35,6 +35,10 @@
             haskell.compiler.ghc9101
             haskell.packages.ghc9101.haskell-language-server
             cabal-install
+            haskellPackages.hoogle
+            haskellPackages.ghci-dap
+            haskellPackages.haskell-debug-adapter
+            haskellPackages.fast-tags
             alex
             happy
           ];

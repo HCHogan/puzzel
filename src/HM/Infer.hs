@@ -13,12 +13,7 @@ import Effectful.State.Static.Local
 
 import HM.Syntax
 import HM.Type
-
-data TypeError
-  = InfiniteType TVar Type
-  | UnificationFail Type Type
-  | UnboundVariable String
-  deriving (Eq)
+import HM.TypeError
 
 newtype TypeEnv = TypeEnv (M.Map Var Scheme)
   deriving (Semigroup, Monoid)

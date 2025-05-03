@@ -55,6 +55,7 @@ library thoughts
     HM.Eval
     HM.Type
     HM.InferC
+    HM.TypeError
 
   hs-source-dirs:
     src
