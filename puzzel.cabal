@@ -78,6 +78,7 @@ library thoughts
     type-operators,
     pretty,
     haskeline,
+    repline,
 
   default-language: GHC2024
   default-extensions:
