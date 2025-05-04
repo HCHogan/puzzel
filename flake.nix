@@ -16,7 +16,7 @@
         pkgs = import nixpkgs {
           inherit system;
         };
-        name = "template";
+        name = "puzzel";
         src = ./.;
       in {
         packages.default = derivation {

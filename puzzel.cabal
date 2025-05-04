@@ -55,7 +55,11 @@ library thoughts
     HM.Eval
     HM.Type
     HM.InferC
-    HM.TypeError
+    HM.Infer.TypeError
+    HM.Infer.Online
+    HM.Infer.Offline
+    HM.Infer.TypeEnv
+    HM.Infer.Subst
 
   hs-source-dirs:
     src

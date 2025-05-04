@@ -13,18 +13,9 @@ import Effectful.State.Static.Local
 
 import HM.Syntax
 import HM.Type
-import HM.TypeError
-
-newtype TypeEnv = TypeEnv (M.Map Var Scheme)
-  deriving (Semigroup, Monoid)
-
-extend :: TypeEnv -> (Var, Scheme) -> TypeEnv
-extend (TypeEnv e) (x, s) = TypeEnv $ M.insert x s e
-
-emptyTypeEnv :: TypeEnv
-emptyTypeEnv = TypeEnv M.empty
-
-type Subst = M.Map TVar Type
+import HM.Infer.TypeError
+import HM.Infer.TypeEnv
+import HM.Infer.Subst
 
 -- use effectful instead of:
 -- type Infer a = ExceptT TypeError (State Unique) a
@@ -43,39 +34,6 @@ closeOver (sub, ty) = normalize sc
 
 normalize :: Scheme -> Scheme
 normalize = undefined
-
-nullSubst :: Subst
-nullSubst = M.empty
-
-compose :: Subst -> Subst -> Subst
-s1 `compose` s2 = M.map (apply s1) s2 `M.union` s1
-
-class Substitutable a where
-  apply :: Subst -> a -> a
-  ftv :: a -> S.Set TVar
-
-instance Substitutable Type where
-  apply _ (TCon a) = TCon a
-  apply s (TArr a b) = TArr (apply s a) (apply s b)
-  apply s t@(TVar a) = M.findWithDefault t a s
-
-  ftv (TCon a) = S.empty
-  ftv (TVar a) = S.singleton a
-  ftv (TArr t1 t2) = ftv t1 `S.union` ftv t2
-
-instance Substitutable Scheme where
-  apply s (Forall as t) = Forall as $ apply s' t
-   where
-    s' = foldr M.delete s as
-  ftv (Forall as t) = ftv t `S.difference` S.fromList as
-
-instance (Substitutable a) => Substitutable [a] where
-  apply = fmap . apply
-  ftv = foldr (S.union . ftv) S.empty
-
-instance Substitutable TypeEnv where
-  apply s (TypeEnv env) = TypeEnv $ M.map (apply s) env
-  ftv (TypeEnv env) = ftv $ M.elems env
 
 letters :: [String]
 letters = [1 ..] >>= flip replicateM ['a' .. 'z']

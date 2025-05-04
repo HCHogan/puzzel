@@ -2,7 +2,8 @@ module HM.Pretty where
 
 import HM.Syntax
 import HM.Type
-import HM.TypeError
+import HM.Infer.TypeError
+import HM.Infer.TypeEnv
 import HM.Infer
 import Prelude hiding ((<>))
 
