@@ -105,10 +105,6 @@ ops =
     , (Eql, TArr typeInt (TArr typeInt typeBool))
     ]
 
--- emit constraints
-uni :: (HasCallStack, Writer [Constraint] :> es) => Type -> Type -> Eff es ()
-uni t1 t2 = tell [(t1, t2)]
-
 -- extend type env
 inEnv :: (HasCallStack, Reader TypeEnv :> es) => (Var, Scheme) -> Eff es a -> Eff es a
 inEnv (x, sc) = local (\e -> remove e x `extend` (x, sc))
@@ -134,43 +130,43 @@ infer :: (HasCallStack, Reader TypeEnv :> es, State InferState :> es, Error Type
 infer = \case
   Lit (LInt _) -> return (typeInt, [])
   Lit (LBool _) -> return (typeBool, [])
-  Var x -> lookupEnv x
+  Var x -> do
+    t <- lookupEnv x
+    return (t, [])
   Lam x e -> do
     tv <- fresh
-    t <- inEnv (x, Forall [] tv) (infer e)
-    return (TArr tv t)
+    (t, c) <- inEnv (x, Forall [] tv) (infer e)
+    return (TArr tv t, c)
   App e1 e2 -> do
-    t1 <- infer e1
-    t2 <- infer e2
+    (t1, c1) <- infer e1
+    (t2, c2) <- infer e2
     tv <- fresh
-    uni t1 (TArr t2 tv)
-    return tv
+    return (tv, c1 ++ c2 ++ [(t1, TArr t2 tv)])
   Let x e1 e2 -> do
     env <- ask @TypeEnv
-    (t1, cs1) <- listen @[Constraint] $ infer e1
-    -- t1 <- infer e1
-    let sc = generalize env t1
-    inEnv (x, sc) (infer e2)
+    (t1, c1) <- infer e1
+    case runSolve c1 of
+      Left err -> throwError_ err
+      Right sub -> do
+        let sc = generalize (apply sub env) (apply sub t1)
+        (t2, c2) <- inEnv (x, sc) $ local @TypeEnv (apply sub) (infer e2)
+        return (t2, c1 ++ c2)
   Fix e1 -> do
-    t1 <- infer e1
+    (t1, c1) <- infer e1
     tv <- fresh
-    uni (TArr tv tv) t1
-    return tv
+    return (tv, (t1, TArr tv tv) : c1)
   Op op e1 e2 -> do
-    t1 <- infer e1
-    t2 <- infer e2
+    (t1, c1) <- infer e1
+    (t2, c2) <- infer e2
     tv <- fresh
     let u1 = TArr t1 $ TArr t2 tv
     let u2 = ops M.! op
-    uni u1 u2
-    return tv
+    return (tv, c1 ++ c2 ++ [(u1, u2)])
   If cond tr fl -> do
-    tcond <- infer cond
-    ttr <- infer tr
-    tfl <- infer fl
-    uni typeBool tcond
-    uni ttr tfl
-    return ttr
+    (tcond, c1) <- infer cond
+    (ttr, c2) <- infer tr
+    (tfl, c3) <- infer fl
+    return (ttr, c1 ++ c2 ++ [(ttr, tfl)])
 
 -- Our solver monad:
 -- type Solve a = StateT Unifier (ExceptT TypeError Identity) a

@@ -1,4 +1,6 @@
 a
+let a = let b = 1 + 1 in b
+a
 let a = let b = 2 in b
 a
 let a = let b = 1 + 1 in b
