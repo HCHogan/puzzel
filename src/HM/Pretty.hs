@@ -4,7 +4,7 @@ import HM.Syntax
 import HM.Type
 import HM.Infer.TypeError
 import HM.Infer.TypeEnv
-import HM.Infer
+import HM.Infer.Online
 import Prelude hiding ((<>))
 
 import Data.Map qualified as M

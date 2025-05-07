@@ -110,7 +110,7 @@ semi :: Parser String
 semi = Tok.semi lexer
 
 integer :: Parser Integer
-integer = Tok.integer lexer
+integer = Tok.natural lexer
 
 contents :: Parser a -> Parser a
 contents p = do

@@ -82,16 +82,7 @@ ifthen = do
   If cond tr <$> expr
 
 aexp :: Parser Expr
-aexp =
-  parens expr
-    <|> bool
-    <|> number
-    <|> ifthen
-    <|> fix
-    <|> try letrecin
-    <|> letin
-    <|> lambda
-    <|> variable
+aexp = choice [parens expr, bool, number, ifthen, fix, try letrecin, letin, lambda, variable]
 
 term :: Parser Expr
 term = do
@@ -140,7 +131,7 @@ val :: Parser Binding
 val = (,) "it" <$> expr
 
 decl :: Parser Binding
-decl = try letrecdecl <|> letdecl <|> val
+decl = try letrecdecl <|> try letdecl <|> val
 
 top :: Parser Binding
 top = decl <* optional semi

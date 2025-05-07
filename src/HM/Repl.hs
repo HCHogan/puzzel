@@ -2,7 +2,7 @@ module HM.Repl where
 
 import HM.Eval
 import HM.Infer.TypeEnv qualified as Env
-import HM.InferC
+import HM.Infer.Offline
 import HM.Parser
 import HM.Pretty
 import HM.Syntax

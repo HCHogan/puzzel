@@ -51,10 +51,8 @@ library thoughts
     HM.Parser
     HM.Lexer
     HM.Pretty
-    HM.Infer
     HM.Eval
     HM.Type
-    HM.InferC
     HM.Infer.TypeError
     HM.Infer.Online
     HM.Infer.Offline
