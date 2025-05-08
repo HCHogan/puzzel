@@ -105,6 +105,10 @@ ops =
     , (Eql, TArr typeInt (TArr typeInt typeBool))
     ]
 
+-- emit constraints
+uni :: (HasCallStack, Writer [Constraint] :> es) => Type -> Type -> Eff es ()
+uni t1 t2 = tell [(t1, t2)]
+
 -- extend type env
 inEnv :: (HasCallStack, Reader TypeEnv :> es) => (Var, Scheme) -> Eff es a -> Eff es a
 inEnv (x, sc) = local (\e -> remove e x `extend` (x, sc))
@@ -123,50 +127,51 @@ inferExpr env ex = case runInfer env (infer ex) of
     Left err -> Left err
     Right subst -> Right $ closeOver $ apply subst ty
 
-runInfer :: TypeEnv -> Eff [State InferState, Reader TypeEnv, Error TypeError] (Type, [Constraint]) -> Either TypeError (Type, [Constraint])
-runInfer e m = runPureEff $ runErrorNoCallStack $ runReader e $ evalState initInfer m
+runInfer :: TypeEnv -> Eff [Writer [Constraint], State InferState, Reader TypeEnv, Error TypeError] Type -> Either TypeError (Type, [Constraint])
+runInfer e m = runPureEff $ runErrorNoCallStack $ runReader e $ evalState initInfer $ runWriter m
 
-infer :: (HasCallStack, Reader TypeEnv :> es, State InferState :> es, Error TypeError :> es) => Expr -> Eff es (Type, [Constraint])
+infer :: (HasCallStack, Reader TypeEnv :> es, Writer [Constraint] :> es, State InferState :> es, Error TypeError :> es) => Expr -> Eff es Type
 infer = \case
-  Lit (LInt _) -> return (typeInt, [])
-  Lit (LBool _) -> return (typeBool, [])
-  Var x -> do
-    t <- lookupEnv x
-    return (t, [])
+  Lit (LInt _) -> return typeInt
+  Lit (LBool _) -> return typeBool
+  Var x -> lookupEnv x
   Lam x e -> do
     tv <- fresh
-    (t, c) <- inEnv (x, Forall [] tv) (infer e)
-    return (TArr tv t, c)
+    t <- inEnv (x, Forall [] tv) (infer e)
+    return (TArr tv t)
   App e1 e2 -> do
-    (t1, c1) <- infer e1
-    (t2, c2) <- infer e2
+    t1 <- infer e1
+    t2 <- infer e2
     tv <- fresh
-    return (tv, c1 ++ c2 ++ [(t1, TArr t2 tv)])
+    uni t1 (TArr t2 tv)
+    return tv
   Let x e1 e2 -> do
     env <- ask @TypeEnv
-    (t1, c1) <- infer e1
-    case runSolve c1 of
-      Left err -> throwError_ err
-      Right sub -> do
-        let sc = generalize (apply sub env) (apply sub t1)
-        (t2, c2) <- inEnv (x, sc) $ local @TypeEnv (apply sub) (infer e2)
-        return (t2, c1 ++ c2)
+    (t0, cs) <- listen @[Constraint] $ infer e1
+    subst <- solve (nullSubst, cs)
+    let t1 = apply subst t0
+    let sc = generalize env t1
+    inEnv (x, sc) (infer e2)
   Fix e1 -> do
-    (t1, c1) <- infer e1
+    t1 <- infer e1
     tv <- fresh
-    return (tv, (t1, TArr tv tv) : c1)
+    uni (TArr tv tv) t1
+    return tv
   Op op e1 e2 -> do
-    (t1, c1) <- infer e1
-    (t2, c2) <- infer e2
+    t1 <- infer e1
+    t2 <- infer e2
     tv <- fresh
     let u1 = TArr t1 $ TArr t2 tv
     let u2 = ops M.! op
-    return (tv, c1 ++ c2 ++ [(u1, u2)])
+    uni u1 u2
+    return tv
   If cond tr fl -> do
-    (tcond, c1) <- infer cond
-    (ttr, c2) <- infer tr
-    (tfl, c3) <- infer fl
-    return (ttr, c1 ++ c2 ++ [(ttr, tfl)])
+    tcond <- infer cond
+    ttr <- infer tr
+    tfl <- infer fl
+    uni typeBool tcond
+    uni ttr tfl
+    return ttr
 
 -- Our solver monad:
 -- type Solve a = StateT Unifier (ExceptT TypeError Identity) a
