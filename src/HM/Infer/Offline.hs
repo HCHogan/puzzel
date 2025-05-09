@@ -4,17 +4,15 @@ module HM.Infer.Offline where
 
 import Control.Lens
 import Control.Monad
+import Data.List (nub)
+import Data.Map qualified as M
+import Data.Set qualified as S
 import Effectful
 import Effectful.Dispatch.Static
 import Effectful.Error.Static
 import Effectful.Reader.Static
 import Effectful.State.Static.Local
 import Effectful.Writer.Static.Local
-
-import Data.List (nub)
-import Data.Map qualified as M
-import Data.Set qualified as S
-
 import HM.Infer.Subst
 import HM.Infer.TypeEnv
 import HM.Infer.TypeError
@@ -35,7 +33,7 @@ newtype InferState = InferState {_count :: Int}
 makeLenses ''InferState
 
 initInfer :: InferState
-initInfer = InferState{_count = 0}
+initInfer = InferState {_count = 0}
 
 type Constraint = (Type, Type)
 
@@ -59,24 +57,24 @@ instantiate (Forall as t) = do
 
 generalize :: TypeEnv -> Type -> Scheme
 generalize env t = Forall as t
- where
-  as = S.toList $ ftv t `S.difference` ftv env
+  where
+    as = S.toList $ ftv t `S.difference` ftv env
 
 normalize :: Scheme -> Scheme
 normalize (Forall _ body) = Forall (map snd ord) (normtype body)
- where
-  ord = zip (nub $ fv body) (map TV letters)
+  where
+    ord = zip (nub $ fv body) (map TV letters)
 
-  fv (TVar a) = [a]
-  fv (TArr a b) = fv a ++ fv b
-  fv (TCon _) = []
+    fv (TVar a) = [a]
+    fv (TArr a b) = fv a ++ fv b
+    fv (TCon _) = []
 
-  normtype (TArr a b) = TArr (normtype a) (normtype b)
-  normtype (TCon a) = TCon a
-  normtype (TVar a) =
-    case Prelude.lookup a ord of
-      Just x -> TVar x
-      Nothing -> error "type variable not in signature"
+    normtype (TArr a b) = TArr (normtype a) (normtype b)
+    normtype (TCon a) = TCon a
+    normtype (TVar a) =
+      case Prelude.lookup a ord of
+        Just x -> TVar x
+        Nothing -> error "type variable not in signature"
 
 bind :: (Error TypeError :> es) => TVar -> Type -> Eff es Subst
 bind a t
@@ -99,10 +97,10 @@ fresh = do
 ops :: M.Map Binop Type
 ops =
   M.fromList
-    [ (Add, TArr typeInt (TArr typeInt typeInt))
-    , (Mul, TArr typeInt (TArr typeInt typeInt))
-    , (Sub, TArr typeInt (TArr typeInt typeInt))
-    , (Eql, TArr typeInt (TArr typeInt typeBool))
+    [ (Add, TArr typeInt (TArr typeInt typeInt)),
+      (Mul, TArr typeInt (TArr typeInt typeInt)),
+      (Sub, TArr typeInt (TArr typeInt typeInt)),
+      (Eql, TArr typeInt (TArr typeInt typeBool))
     ]
 
 -- emit constraints

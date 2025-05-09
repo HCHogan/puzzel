@@ -1,10 +1,10 @@
-cabal-version: 3.4
-name: puzzel
-version: 0.1.0.0
-license: BSD-2-Clause
-license-file: LICENSE
-category: Game
-build-type: Simple
+cabal-version:   3.4
+name:            puzzel
+version:         0.1.0.0
+license:         BSD-2-Clause
+license-file:    LICENSE
+category:        Game
+build-type:      Simple
 extra-doc-files: CHANGELOG.md
 
 common warnings
@@ -12,84 +12,80 @@ common warnings
 
 library thoughts
   exposed-modules:
-    CPS
     Com
+    CPS
     Eff
     EffD
+    Eval.CallByNeed
+    Eval.HOAS
+    Eval.IO
+    Eval.PHOAS
     FuncDep
     GADT
-    ISO
+    HM.Eval
+    HM.Infer.Offline
+    HM.Infer.Online
+    HM.Infer.Subst
+    HM.Infer.TypeEnv
+    HM.Infer.TypeError
+    HM.Lexer
+    HM.Parser
+    HM.Pretty
+    HM.Repl
+    HM.Syntax
+    HM.Type
     Imperative
     Impred
+    ISO
     Kinds
     LambdaArrow
     LambdaPi
     Len
     LevityPoly
     Lists
-    MT
     MicroLens
     MonoRestri
+    MT
     Playground
     Puzzel
     RecordUpdates
+    STLC.Arith
+    STLC.Stlc
     THIH
     Traversable
-    Untyped.Syntax
-    Untyped.Repl
     Untyped.Eval
     Untyped.Parser
     Untyped.Pretty
-    STLC.Arith
-    STLC.Stlc
-    Eval.CallByNeed
-    Eval.HOAS
-    Eval.PHOAS
-    Eval.IO
-    HM.Syntax
-    HM.Repl
-    HM.Parser
-    HM.Lexer
-    HM.Pretty
-    HM.Eval
-    HM.Type
-    HM.Infer.TypeError
-    HM.Infer.Online
-    HM.Infer.Offline
-    HM.Infer.TypeEnv
-    HM.Infer.Subst
+    Untyped.Repl
+    Untyped.Syntax
 
-  hs-source-dirs:
-    src
-
+  hs-source-dirs:     src
   build-depends:
-    aeson,
-    base,
-    comonad,
-    containers,
-    unordered-containers,
-    effectful,
-    lens,
-    mtl,
-    parsec,
-    text,
-    type-operators,
-    pretty,
-    haskeline,
-    repline,
+    , aeson
+    , base
+    , comonad
+    , containers
+    , effectful
+    , haskeline
+    , lens
+    , mtl
+    , parsec
+    , pretty
+    , repline
+    , text
+    , type-operators
+    , unordered-containers
 
-  default-language: GHC2024
+  default-language:   GHC2024
   default-extensions:
-    TypeFamilies
     FunctionalDependencies
     OverloadedRecordDot
     RecordWildCards
+    TypeFamilies
 
 executable puzzel
-  import: warnings
-  main-is: Main.hs
-  build-depends:
-    base
-
-  hs-source-dirs: app
+  import:           warnings
+  main-is:          Main.hs
+  build-depends:    base
+  hs-source-dirs:   app
   default-language: GHC2024

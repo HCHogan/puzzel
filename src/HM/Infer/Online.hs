@@ -10,12 +10,11 @@ import Effectful
 import Effectful.Dispatch.Static
 import Effectful.Error.Static
 import Effectful.State.Static.Local
-
+import HM.Infer.Subst
+import HM.Infer.TypeEnv
+import HM.Infer.TypeError
 import HM.Syntax
 import HM.Type
-import HM.Infer.TypeError
-import HM.Infer.TypeEnv
-import HM.Infer.Subst
 
 -- use effectful instead of:
 -- type Infer a = ExceptT TypeError (State Unique) a
@@ -29,8 +28,8 @@ runInfer m = closeOver <$> runPureEff (evalState emptyTypeEnv $ runErrorNoCallSt
 
 closeOver :: (Subst, Type) -> Scheme
 closeOver (sub, ty) = normalize sc
- where
-  sc = generalize emptyTypeEnv (apply sub ty)
+  where
+    sc = generalize emptyTypeEnv (apply sub ty)
 
 normalize :: Scheme -> Scheme
 normalize = undefined
@@ -91,16 +90,16 @@ instantiate (Forall as t) = do
 --  Γ ⊢ e : ∀ ᾱ. σ
 generalize :: TypeEnv -> Type -> Scheme
 generalize env t = Forall as t
- where
-  as = S.toList $ ftv t `S.difference` ftv env
+  where
+    as = S.toList $ ftv t `S.difference` ftv env
 
 ops :: M.Map Binop Type
 ops =
   M.fromList
-    [ (Add, TArr typeInt (TArr typeInt typeInt))
-    , (Mul, TArr typeInt (TArr typeInt typeInt))
-    , (Sub, TArr typeInt (TArr typeInt typeInt))
-    , (Eql, TArr typeInt (TArr typeInt typeBool))
+    [ (Add, TArr typeInt (TArr typeInt typeInt)),
+      (Mul, TArr typeInt (TArr typeInt typeInt)),
+      (Sub, TArr typeInt (TArr typeInt typeInt)),
+      (Eql, TArr typeInt (TArr typeInt typeBool))
     ]
 
 lookupEnv :: (HasCallStack, State Unique :> es, Error TypeError :> es) => TypeEnv -> Var -> Eff es (Subst, Type)
@@ -167,5 +166,5 @@ inferPrim env l t = do
   (s1, tf) <- foldM inferStep (nullSubst, id) l
   s2 <- unify (apply s1 (tf tv)) t
   return (s2 `compose` s1, apply s2 tv)
- where
-  inferStep = undefined
+  where
+    inferStep = undefined

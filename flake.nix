@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils = {
       url = "github:numtide/flake-utils";
     };
@@ -32,15 +32,17 @@
             lldb
             hlint
 
-            haskell.compiler.ghc9101
-            haskell.packages.ghc9101.haskell-language-server
-            cabal-install
+            haskell.compiler.ghc912
+            haskell.packages.ghc912.haskell-language-server
             haskellPackages.hoogle
             haskellPackages.ghci-dap
             haskellPackages.haskell-debug-adapter
             haskellPackages.fast-tags
-            alex
-            happy
+            haskellPackages.alex
+            haskellPackages.happy
+            haskellPackages.cabal-fmt
+            haskellPackages.fourmolu
+            cabal-install
           ];
           shellHook = ''
             export SHELL=$(which zsh)
