@@ -131,7 +131,7 @@ val :: Parser Binding
 val = (,) "it" <$> expr
 
 decl :: Parser Binding
-decl = try letrecdecl <|> try letdecl <|> val
+decl = try val <|> try letrecdecl <|> letdecl
 
 top :: Parser Binding
 top = decl <* optional semi

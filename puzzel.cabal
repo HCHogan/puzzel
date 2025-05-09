@@ -10,7 +10,7 @@ extra-doc-files: CHANGELOG.md
 common warnings
   ghc-options: -Wall
 
-library thoughts
+library
   exposed-modules:
     Com
     CPS
@@ -86,6 +86,8 @@ library thoughts
 executable puzzel
   import:           warnings
   main-is:          Main.hs
-  build-depends:    base
+  build-depends:    
+    base,
+    puzzel
   hs-source-dirs:   app
   default-language: GHC2024
