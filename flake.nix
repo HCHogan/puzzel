@@ -26,11 +26,10 @@
         };
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
-            clang
-            clang-tools
             gnumake
-            lldb
-            hlint
+            llvmPackages_16.libllvm
+            llvmPackages_16.bintools
+            llvmPackages_16.libcxxClang
 
             haskell.compiler.ghc912
             haskell.packages.ghc912.haskell-language-server
@@ -43,6 +42,7 @@
             haskellPackages.cabal-fmt
             haskellPackages.fourmolu
             cabal-install
+            hlint
           ];
           shellHook = ''
             export SHELL=$(which zsh)
