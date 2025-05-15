@@ -75,7 +75,7 @@ library
     , text
     , type-operators
     , unordered-containers
-    , llvm-tf
+    -- , llvm-tf
     -- , llvm-tf >= 12 && < 13
     -- , llvm-ffi >= 12 && < 13
     -- , llvm-hs-pure >= 12.0
