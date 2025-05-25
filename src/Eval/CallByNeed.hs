@@ -23,7 +23,9 @@ data Type
 type Name = String
 
 type Env = [(Name, Type)]
+
 type VEnv = [(String, IORef Thunk)]
+
 type Thunk = () -> IO Value
 
 data Value
@@ -52,7 +54,8 @@ eval env ex = case ex of
     th <- lookupEnv env n
     v <- force th
     return v
-  -- Lam x e -> return $ VClosure (mkThunk env x e)
+
+-- Lam x e -> return $ VClosure (mkThunk env x e)
 
 lookupEnv :: VEnv -> Name -> IO (IORef Thunk)
 lookupEnv = undefined

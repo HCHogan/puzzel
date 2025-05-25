@@ -58,6 +58,7 @@ library
     Untyped.Pretty
     Untyped.Repl
     Untyped.Syntax
+    Core.Syntax
 
   hs-source-dirs:     src
   build-depends:
