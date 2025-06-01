@@ -1,4 +1,6 @@
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE TypeAbstractions #-}
+{-# LANGUAGE TypeData #-}
 
 module Lists () where
 
@@ -58,15 +60,15 @@ indexHList n (_ : xs) = indexHList (n - 1) xs
 -- this hlist can be used as parameters in dynamic typed languages
 mkConnection :: HList TypeRep -> IO ()
 mkConnection hlist = doTheThing host port method
- where
-  host :: Maybe String
-  host = findValueOfType hlist
-  port :: Maybe Int
-  port = findValueOfType hlist
-  method :: Maybe Method
-  method = findValueOfType hlist
-  doTheThing :: Maybe String -> Maybe Int -> Maybe Method -> IO ()
-  doTheThing = error "todo"
+  where
+    host :: Maybe String
+    host = findValueOfType hlist
+    port :: Maybe Int
+    port = findValueOfType hlist
+    method :: Maybe Method
+    method = findValueOfType hlist
+    doTheThing :: Maybe String -> Maybe Int -> Maybe Method -> IO ()
+    doTheThing = error "todo"
 
 showAll :: HList Showable -> [String]
 showAll = map (\(MkSigma WithShowable x) -> show x)
@@ -114,3 +116,20 @@ processList (MkSomeList tr xs)
   | otherwise = False
 
 -- In this specific situation, using a closed ADT of all the types you’d actually want is probably preferred (like data Value = VBool Bool | VInt Int | VDouble Double | VString String), since we only ever get one of four different types. Using Comparable like this gives you a completely open type that can take any instance of Ord, and using TypeRep gives you a completely open type that can take literally anything.
+
+data MList :: [Type] -> Type where
+  MNil :: MList '[]
+  MCons :: t -> MList ts -> MList (t ': ts)
+
+type data Nat = Zero | Succ Nat
+
+type data P :: Type -> Type -> Type where
+  MkP :: (a ~ Int, b ~~ Char) => P a b
+
+data TypeDataVec :: Type -> Nat -> Type where
+  Nil :: TypeDataVec a Zero
+  Cons :: a -> TypeDataVec a n -> TypeDataVec a (Succ n)
+
+myid :: a -> a
+myid @a x = x :: a
+  

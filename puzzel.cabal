@@ -59,6 +59,8 @@ library
     Untyped.Repl
     Untyped.Syntax
     Core.Syntax
+    Free
+    Cont
 
   hs-source-dirs:     src
   build-depends:

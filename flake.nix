@@ -44,10 +44,6 @@
             cabal-install
             hlint
           ];
-          shellHook = ''
-            export SHELL=$(which zsh)
-            exec zsh
-          '';
         };
       }
     );
