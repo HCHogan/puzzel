@@ -1,5 +1,7 @@
 module Free where
 
+import Data.Functor
+
 data Eff f a where
   Return :: a -> Eff f a
   Then :: f a -> (a -> Eff f b) -> Eff f b
@@ -51,8 +53,8 @@ instance (Functor f) => Monad (Free f) where
 
 -- first >>= lifts f :: a -> Free f b to Free f a -> Free f b, and the <$> lifts it to f (Free f a) -> f (Free f b), the implementation is very similar to the one for Functor
 
-newtype StateF s a = StateF { runStateF :: s -> (a, s) }
-  deriving stock Functor
+newtype StateF s a = StateF {runStateF :: s -> (a, s)}
+  deriving stock (Functor)
 
 getF :: StateF s s
 getF = StateF $ \s -> (s, s)
@@ -62,7 +64,7 @@ putF s = StateF $ const ((), s)
 
 type State s = Free (StateF s)
 
-liftF :: Functor f => f a -> Free f a
+liftF :: (Functor f) => f a -> Free f a
 liftF fa = Free $ Pure <$> fa
 
 get :: State s s
@@ -80,6 +82,75 @@ something = do
 runState :: State s a -> s -> (a, s)
 runState (Pure x) s = (x, s)
 runState (Free f) s =
-  let (m, s') = runStateF f s in
-  runState m s'
+  let (m, s') = runStateF f s
+   in runState m s'
 
+-- we've essentially moved the implementation of implementation of `>>=` to `runState`. The free monad doesn’t specify the meaning of monadic actions, so we have to decide what those actions mean when we’re running it. To illustrate this, we can implement write another interpreter, which is essentially a pretty-printer for the flow of a State computation.
+
+printState :: (Show s, Show a) => State s a -> s -> String
+printState (Pure x) s = "pure (" <> show x <> "," <> show s <> ")"
+printState (Free m) s =
+  let (x, s') = runStateF m s
+   in "state change" <> show s <> " -> " <> show s' <> " | " <> printState x s'
+
+-- >>> printState something 1
+-- "state change1 -> 1 | state change1 -> 2 | pure ((),2)"
+
+-- In general, we can restore any proper monad behavior from a free monad since it dosen't define any sementics beyond those necessary for any monad. free provides a function for that:
+
+foldFree :: (Monad m) => (forall x. f x -> m x) -> Free f a -> m a
+foldFree _ (Pure a) = return a
+foldFree f (Free g) = do
+  x <- f g
+  foldFree f x
+
+-- lets define a eDSL using free monads:
+
+data ASTF t a
+  = Add t t (t -> a)
+  | Input (t -> a)
+  | Output t a
+  deriving (Functor)
+
+type FreeAST t = Free (ASTF t)
+
+input :: FreeAST t t
+input = liftF $ Input id
+
+add :: t -> t -> FreeAST t t
+add x y = liftF $ Add x y id
+
+output :: t -> FreeAST t ()
+output x = liftF $ Output x ()
+
+astProgram :: (Read a, Show a) => FreeAST a ()
+astProgram = do
+  x <- input
+  y <- input
+  res <- add x y
+  output res
+
+computeAST :: FreeAST Int () -> IO ()
+computeAST = foldFree go
+  where
+    go :: ASTF Int a -> IO a
+    go = \case
+      Add x y next -> pure $ next (x + y)
+      Input next -> next . read <$> getLine
+      Output x next -> print x $> next
+
+-- Trees as free monads
+data BinTreeF l a = NodeF l a a
+  deriving (Functor)
+
+type FreeBinTree l = Free (BinTreeF l)
+
+buildBalanced :: [Int] -> FreeBinTree Int (Maybe Int)
+buildBalanced [] = pure Nothing
+buildBalanced [x] = pure $ Just x
+buildBalanced xs = do
+  let len = length xs
+  let (l, x:r) = splitAt (len `div` 2) xs 
+  b <- liftF $ NodeF x l r
+  buildBalanced b
+  
