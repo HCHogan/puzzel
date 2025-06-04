@@ -1,6 +1,8 @@
+{-# LANGUAGE RequiredTypeArguments #-}
 module Free where
 
 import Data.Functor
+import Data.Kind
 
 data Eff f a where
   Return :: a -> Eff f a
@@ -51,7 +53,7 @@ instance (Functor f) => Monad (Free f) where
   Pure x >>= f = f x
   Free g >>= f = Free ((>>= f) <$> g)
 
--- first >>= lifts f :: a -> Free f b to Free f a -> Free f b, and the <$> lifts it to f (Free f a) -> f (Free f b), the implementation is very similar to the one for Functor
+-- first (>>=) lifts f :: a -> Free f b to Free f a -> Free f b, and the <$> lifts it to f (Free f a) -> f (Free f b), the implementation is very similar to the one for Functor
 
 newtype StateF s a = StateF {runStateF :: s -> (a, s)}
   deriving stock (Functor)
@@ -154,3 +156,28 @@ buildBalanced xs = do
   b <- liftF $ NodeF x l r
   buildBalanced b
   
+data A = A1 | A2
+
+type family B (x :: A) :: Type where
+  B 'A1 = Int
+  B 'A2 = Bool
+
+-- fff :: forall (x :: A) -> B x
+-- fff A1 = 42
+-- fff A2 = True
+
+idVdq :: forall (a :: Type) -> a -> a
+idVdq t x = x
+
+readshow :: forall a -> (Read a, Show a) => String -> String
+readshow t s = show (read s :: t)
+
+-- >>> readshow Int "42"
+-- "42"
+
+-- >>> readshow Double "3.14"
+-- "3.14"
+
+-- >>> idVdq Int 123
+-- 123
+
