@@ -61,6 +61,8 @@ library
     Core.Syntax
     Free
     Cont
+    Optics
+    Hei
 
   hs-source-dirs:     src
   build-depends:
@@ -78,6 +80,7 @@ library
     , text
     , type-operators
     , unordered-containers
+    , heftia-effects
     -- , llvm-tf
     -- , llvm-tf >= 12 && < 13
     -- , llvm-ffi >= 12 && < 13
