@@ -63,6 +63,7 @@ library
     Cont
     Optics
     Hei
+    Delimited
 
   hs-source-dirs:     src
   build-depends:
