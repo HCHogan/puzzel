@@ -64,6 +64,7 @@ library
     Optics
     Hei
     Delimited
+    Subtyping
 
   hs-source-dirs:     src
   build-depends:
