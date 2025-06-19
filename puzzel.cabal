@@ -65,6 +65,7 @@ library
     Hei
     Delimited
     Subtyping
+    Recursive
 
   hs-source-dirs:     src
   build-depends:
