@@ -27,6 +27,8 @@ p = p' 0
     p' :: Int -> Process
     p' n = Process $ \acc -> let newacc = acc + n in (newacc, p' newacc)
 
+damn = 1 + 5
+
 curr :: Process -> Int
 curr (Process f) = let (x, _) = f 0 in x
 
