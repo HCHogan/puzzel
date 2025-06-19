@@ -44,3 +44,11 @@ y = D $ \f ->
   let g = D $ \x ->
         unD f (unD x x)
    in unD g g
+
+-- >>> :type y
+-- y :: D
+
+
+-- >>> :type send
+-- send :: Int -> Process -> Process
+
