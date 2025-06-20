@@ -277,15 +277,6 @@ fork tag thread = control0 tag $ pure . Op . Fork thread
 yield :: Conc % r -> Mom ()
 yield tag = control0 tag $ pure . Op . Yield
 
-simpleThread :: Out String % r -> Conc % s -> Int -> Mom ()
-simpleThread out conc n = do
-  log out $ show n
-  yield conc
-  log out $ show n
-  yield conc
-  log out $ show n
-  yield conc
-
 runConc :: (Conc % () -> Mom ()) -> Mom ()
 runConc f = do
   tag <- newPromptTag
@@ -297,6 +288,16 @@ runConc f = do
         Op (Yield continue) -> handle tag (ts ++ [continue $ pure ()])
         Op (Fork th continue) -> handle tag (continue (pure ()) : ts ++ [Pure <$> th])
         Pure () -> handle tag ts
+
+simpleThread :: Out String % r -> Conc % s -> Int -> Mom ()
+simpleThread out conc n = do
+
+  log out $ show n
+  yield conc
+  log out $ show n
+  yield conc
+  log out $ show n
+  yield conc
 
 -- tests
 testFib :: IO ()
