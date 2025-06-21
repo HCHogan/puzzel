@@ -164,20 +164,20 @@ instance (Memo a) => Memo [a] where
 instance Memo Int where
   data Table Int w = TInt (Table [Bool] w)
   toTable f = TInt (toTable (f . bitsToInt))
-   where
-    bitsToInt = error "TODO"
+    where
+      bitsToInt = error "TODO"
   fromTable (TInt t) n = fromTable t (intToBits n)
-   where
-    intToBits = error "TODO"
+    where
+      intToBits = error "TODO"
 
 -- linear fib
 fib :: Int -> Int
 fib = memo fib'
- where
-  fib' :: Int -> Int
-  fib' 0 = 1
-  fib' 1 = 1
-  fib' n = fib (n - 1) + fib (n - 2)
+  where
+    fib' :: Int -> Int
+    fib' 0 = 1
+    fib' 1 = 1
+    fib' n = fib (n - 1) + fib (n - 2)
 
 -- class Elem a where
 --   data [:a:]
@@ -223,3 +223,12 @@ fib = memo fib'
 --     eql [] [] = True
 --     eql (x:xs) (y:ys) = (==) d x y && eql xs ys
 --     eql _ _ = False
+
+data HiddenCounter where
+  MkHiddenCounter :: {newState :: s, getValue :: s -> Int, incState :: s -> s} -> HiddenCounter
+
+counterFromInt :: HiddenCounter
+counterFromInt = MkHiddenCounter {newState = 0, getValue = id, incState = (+ 1)}
+
+foo = case counterFromInt of
+  MkHiddenCounter {newState = s, getValue = f, incState = g} -> f s
