@@ -1,5 +1,3 @@
-module Impred () where
+module Impred (main) where
 
-import Type.Reflection
-
-
+main = print 1

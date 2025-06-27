@@ -65,6 +65,7 @@ library
     Hei
     Delimited
     Subtyping
+    Pattern
 
   hs-source-dirs:     src
   build-depends:
