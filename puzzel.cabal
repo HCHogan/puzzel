@@ -66,6 +66,8 @@ library
     Delimited
     Subtyping
     Pattern
+    TIT
+    FOmega.Syntax
 
   hs-source-dirs:     src
   build-depends:

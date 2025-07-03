@@ -291,7 +291,6 @@ runConc f = do
 
 simpleThread :: Out String % r -> Conc % s -> Int -> Mom ()
 simpleThread out conc n = do
-
   log out $ show n
   yield conc
   log out $ show n
