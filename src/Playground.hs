@@ -1,4 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TypeFamilies #-}
+
 module Playground (RegExp (..), parseRegExp) where
 
 import Control.Monad.Reader
@@ -6,8 +8,8 @@ import Control.Monad.ST
 import Control.Monad.State
 import Control.Monad.Trans
 import Control.Monad.Writer
-import qualified Data.Text as T
 import Data.STRef
+import Data.Text qualified as T
 import Text.Parsec
 import Text.Parsec.String (Parser)
 
@@ -31,7 +33,6 @@ computation = do
   n <- asks bar
   x <- asks ffoo
   if n > 0 then return (Just x) else return Nothing
-
 
 -- >>> runReader computation $ MyContext "hello" 1
 -- Just "hello"
@@ -111,3 +112,12 @@ counterExample = runST $ do
   readSTRef ref
 
 -- _ = runST (newSTRef 1)
+
+class C a where
+  method :: a -> String
+
+class (C a) => D a
+
+class (C a) => E a
+
+-- instance (E b, b ~ Maybe a) => D (Maybe a)
