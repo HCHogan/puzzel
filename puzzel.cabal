@@ -68,6 +68,7 @@ library
     Pattern
     TIT
     FOmega.Syntax
+    FingerTree
 
   hs-source-dirs:     src
   build-depends:
@@ -86,6 +87,8 @@ library
     , type-operators
     , unordered-containers
     , heftia-effects
+    , unliftio
+    , fingertree
     -- , llvm-tf
     -- , llvm-tf >= 12 && < 13
     -- , llvm-ffi >= 12 && < 13
