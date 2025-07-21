@@ -69,6 +69,7 @@ library
     TIT
     FOmega.Syntax
     FingerTree
+    Language.Moonbit
 
   hs-source-dirs:     src
   build-depends:
