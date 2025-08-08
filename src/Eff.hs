@@ -1,17 +1,19 @@
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE PartialTypeSignatures #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Eff () where
 
 import Control.Lens
+import Data.Text qualified as T
 import Effectful
-import Effectful.Dispatch.Static (HasCallStack)
+import Effectful.Dispatch.Static (HasCallStack, SideEffects (..), StaticRep, getStaticRep, unsafeEff_, evalStaticRep)
 import Effectful.Error.Static
 import Effectful.State.Static.Local
 import Effectful.Writer.Static.Local
 
 data User = User {_name :: String, _age :: Int} deriving (Show)
+
 data AppState = AppState {_user :: User, _count :: Int} deriving (Show)
 
 makeLenses ''User
@@ -49,4 +51,16 @@ testStateError s = do
 runShit :: (HasCallStack) => (Either String (), String)
 runShit = runPureEff $ runWriter $ runErrorNoCallStack $ testStateError "landepen"
 
+data Log :: Effect
 
+type instance DispatchOf Log = 'Static 'WithSideEffects
+
+newtype instance StaticRep Log = Log (T.Text -> IO ())
+
+logMsg :: (Log :> es) => T.Text -> Eff es ()
+logMsg msg = do
+  Log f <- getStaticRep
+  unsafeEff_ $ f msg
+
+runLog :: (IOE :> es) => (T.Text -> IO ()) -> Eff (Log : es) a -> Eff es a
+runLog f = evalStaticRep (Log f)

@@ -30,7 +30,7 @@ data Assignment
   deriving (Eq)
 
 instance Show Assignment where
-  show (MkAssignment{..}) = "(" ++ show orangutan ++ ", " ++ show handler ++ ", " ++ show location ++ ", " ++ show age ++ ")"
+  show (MkAssignment {..}) = "(" ++ show orangutan ++ ", " ++ show handler ++ ", " ++ show location ++ ", " ++ show age ++ ")"
 
 type Solution = [Assignment]
 
@@ -38,10 +38,10 @@ answers :: [Solution]
 answers = do
   solution@[merah, ofallo, quirrel, shamir] <-
     [ zipWith4 MkAssignment orangutans hs ls as
-      | hs <- permutations handlers
-      , ls <- permutations locations
-      , as <- permutations ages
-      ]
+    | hs <- permutations handlers,
+      ls <- permutations locations,
+      as <- permutations ages
+    ]
 
   guard $ shamir.age == 7
   guard $ shamir.location == Ambalat
@@ -62,3 +62,10 @@ answers = do
   guard $ kendisi.age > dolly.age
 
   return solution
+
+pairs :: [(Int, Int)]
+pairs = do
+  x <- [1, 2, 3]
+  y <- [10, 20]
+  guard (x + y > 12)
+  return (x, y)
