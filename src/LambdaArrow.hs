@@ -223,6 +223,27 @@ boundfree :: Int -> Name -> TermI
 boundfree i (Quote k) = Bound (i - k - 1)
 boundfree i x = Free x
 
+add :: Int -> Int -> Int
+add x y = x + y
+
+add' :: (Int, Int) -> Int
+add' (x, y) = x + y
+
+-- test :: Int
+test = 
+  let x = 1 in
+  let y = 2 in
+  add x y
+
+qsort :: [Int] -> [Int]
+qsort arr = case arr of
+  [] -> []
+  (x:xs) -> filter' (<= x) xs ++ filter' (> x) xs
+
+filter' :: (Int -> Bool) -> [Int] -> [Int]
+filter' _ [] = []
+filter' p (x:xs) = if p x then x : filter' p xs else filter' p xs
+
 id' = Lam (Inf (Bound 0))
 
 const' = Lam (Lam (Inf (Bound 1)))

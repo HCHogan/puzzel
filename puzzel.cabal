@@ -70,6 +70,8 @@ library
     FOmega.Syntax
     FingerTree
     Language.Moonbit
+    Demo1
+    Demo2
 
   hs-source-dirs:     src
   build-depends:
@@ -90,6 +92,7 @@ library
     , heftia-effects
     , unliftio
     , fingertree
+    , random
     -- , llvm-tf
     -- , llvm-tf >= 12 && < 13
     -- , llvm-ffi >= 12 && < 13

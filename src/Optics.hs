@@ -48,3 +48,21 @@ anotherShip = Ship "Voyager" 150
 -- >>> set shipInfo2 (view shipInfo2 exampleShip) exampleShip
 -- Ship {_name = "Enterprise", _numCrew = 1000}
 
+-- match :: Query -> Entry -> Maybe Cost
+--
+-- (Int) -> Int
+--
+-- async (Bool) -> Int raise Ee
+--
+-- [K](K) -> Int
+--
+-- [T](T) -> Int
+--
+-- (Int) -> Int
+-- (Option[Int]) -> Int
+--
+-- Int -> Int
+-- [T : Compare](T) -> Int
+--
+-- (Int, Int) -> Int
+-- Int -> Int -> Int
