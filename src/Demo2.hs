@@ -5,6 +5,7 @@ module Demo2 where
 import Control.Arrow
 import Control.Category qualified as Cat
 import Control.Monad
+import Data.Bifunctor qualified as BF
 import Data.List
 import Data.Maybe
 import Data.Tuple
@@ -70,7 +71,7 @@ pickWord rng = proc () -> do
 
 -- >>> rng <- getStdGen
 -- >>> runCircuit (pickWord rng) $ replicate 3 ()
--- ["bird","dog","bird"]
+-- ["bird","cat","cat"]
 
 oneShot :: Circuit () Bool
 oneShot = accum True $ \() acc -> (acc, False)
@@ -116,3 +117,41 @@ myRight a = arr (\case Left x -> Right x; Right x -> Left x) >>> left a >>> arr 
 
 liftY2 :: (Arrow y) => (a -> b -> c) -> y r a -> y r b -> y r c
 liftY2 f yra yrb = (yra &&& yrb) >>> arr (uncurry f)
+
+data Parser s a b = P (StaticParser s) (DynamicParser s a b)
+
+data StaticParser s = SP Bool [s] -- if the parser can accept the empty input, and a list of possible starting characters
+
+newtype DynamicParser s a b = DP ((a, [s]) -> (b, [s]))
+
+runParser :: (Eq s) => Parser s a b -> a -> [s] -> Maybe (b, [s])
+runParser (P (SP emp _) (DP p)) a []
+  | emp = Just (p (a, []))
+  | otherwise = Nothing
+runParser (P (SP _ start) (DP p)) a input@(x : _)
+  | x `elem` start = Just (p (a, input))
+  | otherwise = Nothing
+
+charA :: Char -> Parser Char a Char
+charA c = P (SP False [c]) (DP (\(_, _ : xs) -> (c, xs)))
+
+-- >>> runParser (charA 'D') () "Do"
+-- Just ('D',"o")
+
+instance (Eq s) => Arrow (Parser s) where
+  arr f = P (SP True []) (DP (BF.first f))
+  first (P sp (DP p)) =
+    P
+      sp
+      ( DP
+          ( \((b, d), s) ->
+              let (c, s') = p (b, s) in ((c, d), s')
+          )
+      )
+
+instance (Eq s) => Cat.Category (Parser s) where
+  id = P (SP True []) (DP id)
+  (P (SP empty1 start1) (DP p1)) . (P (SP empty2 start2) (DP p2)) =
+    P (SP (empty1 && empty2) (if not empty1 then start1 else start1 `union` start2)) (DP (p1 . p2))
+
+
