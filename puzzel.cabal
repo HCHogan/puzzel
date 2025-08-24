@@ -72,6 +72,7 @@ library
     Language.Moonbit
     Demo1
     Demo2
+    STM
 
   hs-source-dirs:     src
   build-depends:
@@ -93,6 +94,7 @@ library
     , unliftio
     , fingertree
     , random
+    , stm
     -- , llvm-tf
     -- , llvm-tf >= 12 && < 13
     -- , llvm-ffi >= 12 && < 13
