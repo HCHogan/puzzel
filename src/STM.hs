@@ -26,3 +26,25 @@ main = do
   accountA <- newAccount "A" 1000
   accountA <- newAccount "B" 1000
   return ()
+
+newOrderList :: IO (TMVar [String])
+newOrderList = newEmptyTMVarIO
+
+bullmooseGardenCenter2 :: IO ()
+bullmooseGardenCenter2 = do
+  orderList <- newOrderList
+  atomically $ putTMVar orderList []
+  void $ forkIO $ forever $ deliver orderList
+  forever $ takeOrders orderList
+
+  where
+    deliver :: TMVar [String] -> IO ()
+    deliver orderList = do
+      threadDelay 10_000_000
+      -- orders <- atomically $ do
+      --   orders <- takeTMVar orderList
+      --   undefined
+
+    takeOrders :: TMVar [String] -> IO ()
+    takeOrders orderList = do
+      undefined
