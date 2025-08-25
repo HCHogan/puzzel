@@ -73,6 +73,7 @@ library
     Demo1
     Demo2
     STM
+    TagF
 
   hs-source-dirs:     src
   build-depends:
@@ -97,6 +98,7 @@ library
     , fingertree
     , random
     , stm
+    , free
     -- , llvm-tf
     -- , llvm-tf >= 12 && < 13
     -- , llvm-ffi >= 12 && < 13
