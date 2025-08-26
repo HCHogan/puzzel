@@ -74,6 +74,7 @@ library
     Demo2
     STM
     TagF
+    Comonad
 
   hs-source-dirs:     src
   build-depends:
