@@ -75,6 +75,7 @@ library
     STM
     TagF
     Comonad
+    Arr
 
   hs-source-dirs:     src
   build-depends:
