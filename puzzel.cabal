@@ -76,6 +76,8 @@ library
     TagF
     Comonad
     Arr
+    Demo3
+    Demo4
 
   hs-source-dirs:     src
   build-depends:
