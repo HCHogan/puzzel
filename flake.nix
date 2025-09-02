@@ -1,50 +1,41 @@
 {
-  inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    flake-utils = {
-      url = "github:numtide/flake-utils";
-    };
+  inputs.haskellNix.url = "github:input-output-hk/haskell.nix";
+  inputs.nixpkgs.follows = "haskellNix/nixpkgs-unstable";
+  inputs.flake-utils.url = "github:numtide/flake-utils";
+  outputs = { self, nixpkgs, flake-utils, haskellNix }:
+    let
+      supportedSystems = [
+        "x86_64-linux"
+        "x86_64-darwin"
+        "aarch64-linux"
+        "aarch64-darwin"
+      ];
+    in
+      flake-utils.lib.eachSystem supportedSystems (system:
+      let
+        overlays = [ haskellNix.overlay
+          (final: _prev: {
+            hixProject =
+              final.haskell-nix.hix.project {
+                src = ./.;
+                # uncomment with your current system for `nix flake show` to work:
+                evalSystem = "x86_64-linux";
+              };
+          })
+        ];
+        pkgs = import nixpkgs { inherit system overlays; inherit (haskellNix) config; };
+        flake = pkgs.hixProject.flake {};
+      in flake // {
+        legacyPackages = pkgs;
+      });
+
+  # --- Flake Local Nix Configuration ----------------------------
+  nixConfig = {
+    # This sets the flake to use the IOG nix cache.
+    # Nix should ask for permission before using it,
+    # but remove it here if you do not want it to.
+    extra-substituters = ["https://cache.iog.io"];
+    extra-trusted-public-keys = ["hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ="];
+    allow-import-from-derivation = "true";
   };
-
-  outputs = {
-    self,
-    nixpkgs,
-    flake-utils,
-  }:
-    flake-utils.lib.eachDefaultSystem (
-      system: let
-        pkgs = import nixpkgs {
-          inherit system;
-        };
-        name = "puzzel";
-        src = ./.;
-      in {
-        packages.default = derivation {
-          inherit system name src;
-          builder = with pkgs; "${bash}/bin/bash";
-          args = ["-c" "echo foo > $out"];
-        };
-        devShells.default = pkgs.mkShell {
-          buildInputs = with pkgs; [
-            gnumake
-            llvmPackages_16.libllvm
-            llvmPackages_16.bintools
-            llvmPackages_16.libcxxClang
-
-            haskell.compiler.ghc912
-            haskell.packages.ghc912.haskell-language-server
-            haskellPackages.hoogle
-            haskellPackages.ghci-dap
-            haskellPackages.haskell-debug-adapter
-            haskellPackages.fast-tags
-            haskellPackages.alex
-            haskellPackages.happy
-            haskellPackages.cabal-fmt
-            haskellPackages.fourmolu
-            cabal-install
-            hlint
-          ];
-        };
-      }
-    );
 }
