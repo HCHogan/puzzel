@@ -78,6 +78,8 @@ library
     Arr
     Demo3
     Demo4
+    Typeable
+    Via
 
   hs-source-dirs:     src
   build-depends:
@@ -103,6 +105,7 @@ library
     , random
     , stm
     , free
+    , syb
     -- , llvm-tf
     -- , llvm-tf >= 12 && < 13
     -- , llvm-ffi >= 12 && < 13
