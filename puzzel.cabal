@@ -80,6 +80,7 @@ library
     Demo4
     Typeable
     Via
+    Heftia
 
   hs-source-dirs:     src
   build-depends:
