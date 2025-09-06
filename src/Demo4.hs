@@ -13,6 +13,7 @@ import Effectful
 import Effectful.Dispatch.Dynamic
 import Effectful.Reader.Dynamic qualified as ER
 import Effectful.State.Static.Local qualified as ES
+import Effectful.Error.Static qualified as EE
 import GHC.Clock (getMonotonicTime)
 import System.Timeout (timeout)
 import Type.Reflection
@@ -92,4 +93,15 @@ runDummyRNG = interpret_ \case
 data MyException = MyException
   deriving stock (Show, Typeable)
   deriving anyclass Exception
+
+action2 :: (ES.State Bool :> es, EE.Error () :> es) => Eff es Bool
+action2 = do
+  (ES.put True *> EE.throwError ()) `EE.catchError` \_ () -> pure ()
+  ES.get
+
+-- >>> runPureEff $ EE.runErrorNoCallStack $ ES.evalState False action2
+-- Right True
+
+-- >>> runPureEff $ ES.evalState False $ EE.runErrorNoCallStack action2
+-- Right True
 

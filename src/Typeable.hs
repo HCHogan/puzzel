@@ -52,4 +52,4 @@ data Record = MkR {field :: Int, other_field :: Bool}
 --                  'DecidedLazy)
 --               (K1 R Bool)))
 
-data A = MkA (A -> Int)
+newtype A = MkA (A -> A)
