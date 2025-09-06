@@ -1,5 +1,6 @@
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE DeriveAnyClass #-}
 
 module Demo4 where
 
@@ -14,6 +15,8 @@ import Effectful.Reader.Dynamic qualified as ER
 import Effectful.State.Static.Local qualified as ES
 import GHC.Clock (getMonotonicTime)
 import System.Timeout (timeout)
+import Type.Reflection
+import Control.Exception
 
 flakyAction1 :: StateT Int IO ()
 flakyAction1 = do
@@ -85,3 +88,8 @@ instance (RNG :> es) => MonadRNG (Eff es) where
 runDummyRNG :: Eff (RNG : es) a -> Eff es a
 runDummyRNG = interpret_ \case
   RandomInt -> pure 42
+
+data MyException = MyException
+  deriving stock (Show, Typeable)
+  deriving anyclass Exception
+

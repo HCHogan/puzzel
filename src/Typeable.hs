@@ -18,7 +18,8 @@ data Wurble = MkW Int Bool Int Double
 add1 :: (Data a) => a -> a
 add1 = everywhere (mkT ((+ 1) :: Int -> Int))
 
--- add1 (MkW 2 True 3 8)
+-- >>> add1 (MkW 2 True 3 8)
+-- MkW 3 True 4 8.0
 
 -- >>> :t everywhere
 -- everywhere :: (forall a. Data a => a -> a) -> forall a. Data a => a -> a
@@ -51,3 +52,4 @@ data Record = MkR {field :: Int, other_field :: Bool}
 --                  'DecidedLazy)
 --               (K1 R Bool)))
 
+data A = MkA (A -> Int)
