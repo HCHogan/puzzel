@@ -66,3 +66,7 @@ anotherShip = Ship "Voyager" 150
 --
 -- (Int, Int) -> Int
 -- Int -> Int -> Int
+
+-- >>> :t view
+-- view :: MonadReader s m => Getting a s a -> m a
+
